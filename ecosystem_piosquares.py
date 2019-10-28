@@ -8,8 +8,8 @@ import xlrd, csv, requests, shutil
 from docx import Document
 from docx.shared import Inches
 from PIL import Image
-from docx.enum.style import WD_STYLE_TYPE
-from docx.shared import Pt
+from docx.shared import Cm
+from docx.enum.text import WD_BREAK
 
 # Step 1 - Extract variables from Json file and create dictionaries
 # Convert from Excel to CSV, remove unneeded columns, only leave 1 industry
@@ -24,8 +24,9 @@ def csv_from_excel():
     
 def remove_cols():
     f=pd.read_csv("csv_file.csv")
-    keep_col = ['Company Name', 'Domain', 'Logo', 'Your industry']
+    keep_col = ['Company Name', 'Domain', 'Description', 'Logo', 'Your industry']
     new_f = f[keep_col]
+    new_f = new_f.dropna()
     new_f.to_csv("new_csv.csv", index=False)
     
 csv_from_excel()
@@ -119,14 +120,59 @@ class graph():
 g = graph()
 g.boxes()
 
-# Step 3 - Create Text and input all files and text into Word document   
+# Step 3 - Create Text and input all files and text into Word document 
 document = Document()
-document.add_heading('Ecosystem Report for {0}, {1}, {2} and {3}'.format(*industries))
+p = document.add_paragraph()
+p.alignment = 1
+r = p.add_run()
+r.add_text('Ecosystem Report for {0}, {1}, {2} and {3}'.format(*industries))
+p_empty = document.add_paragraph()
 p1 = document.add_paragraph()
 p1.alignment = 1
 r = p1.add_run()
 r.add_picture('ecosystem_map.png') 
-p2 = document.add_paragraph()
-r = p2.add_run()
-r.add_text(' HOW DO YOU LIKE ME NOW, DAD?')
+p_empty = document.add_paragraph()
+p3 = document.add_paragraph()
+r = p3.add_run()
+
+def set_column_width(column, width):
+    column.width = width
+    for cell in column.cells:
+        cell.width = width
+
+def table_maker(_):
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.bold = True
+    r.add_text(industries[_])
+    table = document.add_table(1, 3)
+    
+    heading_cells = table.rows[0].cells
+    heading_cells[0].text = 'Company Name  '
+    heading_cells[1].text = 'Domain  '
+    heading_cells[2].text = 'Description'
+    heading_cells[2].width = Inches(1)
+    new = file.loc[file['Your industry'] == industries[_]]
+    keep = ['Company Name', 'Domain', 'Description']
+    for name, domain, descr in new[keep].itertuples(index=False): 
+        cells = table.add_row().cells
+        if len(name) > 13:
+            name = name[0:13] + '.. '
+            cells[0].text = name
+        if len(name) <= 13:
+            cells[0].text = name
+        cells[1].text = domain + ' '
+        if len(descr) > 40:
+            descr = descr[0:41] + '...'
+            cells[2].text = descr
+        if len(descr) <= 40:
+            cells[2].text = descr   
+    set_column_width(table.columns[0], Cm(8))
+    set_column_width(table.columns[1], Cm(8))
+    set_column_width(table.columns[2], Cm(40))
+    document.add_paragraph()
+
+for i in range(0, 3):
+    table_maker(i)
+    
 document.save('demo.docx')
