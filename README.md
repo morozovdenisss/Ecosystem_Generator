@@ -6,7 +6,7 @@ The purpose of this script is to take the spreadsheet downloaded from PioBay pla
 
 P.S. Due to the data handling rules the logos and names on the report are blurred.
 
-![Report 1](reports/pioneers_report_1_blurred.PNG)
+![Report 1](https://github.com/morozovdenisss/Ecosystem_Generator/blob/master/reports/pioneers_report_blurred.png)
 
 ## Austrian Startups Piechart Report
 This project has similar purpose to the previous, but required a different visualization and many more industries to be included in the circle shape. 
