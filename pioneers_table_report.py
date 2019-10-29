@@ -9,7 +9,7 @@ from docx import Document
 from docx.shared import Inches
 from PIL import Image
 from docx.shared import Cm, Pt, Mm
-from docx.enum.text import WD_BREAK
+from docx.enum.text import WD_BREAK, WD_LINE_SPACING
 from docx.enum.style import WD_STYLE_TYPE
 
 # Step 1 - Extract variables from Json file and create dictionaries
@@ -40,19 +40,19 @@ class graph():
         fig = plt.figure(constrained_layout=True, dpi=200)
         gs = GridSpec(2, 2, figure=fig)
         
-        ax1 = fig.add_subplot(gs[0, 0], title = industries[0])
+        ax1 = fig.add_subplot(gs[0, 0])
         industry = 0
         self.image_placer(ax1, industry)
             
-        ax2 = fig.add_subplot(gs[0, 1], title = industries[1])
+        ax2 = fig.add_subplot(gs[0, 1])
         industry = 1
         self.image_placer(ax2, industry)
 
-        ax3 = fig.add_subplot(gs[1, 0], title = industries[2])
+        ax3 = fig.add_subplot(gs[1, 0])
         industry = 2
         self.image_placer(ax3, industry)
         
-        ax4 = fig.add_subplot(gs[1, 1], title = industries[3])
+        ax4 = fig.add_subplot(gs[1, 1])
         industry = 3
         self.image_placer(ax4, industry)
         
@@ -61,7 +61,82 @@ class graph():
             ax.tick_params(labelbottom=False, labelleft=False, bottom = False, left = False)
         plt.savefig('images/ecosystem_map.png',bbox_inches='tight')
         plt.show()
-        
+    
+    def image_placer(self, _, industry):
+        _.set_title(industries[industry], fontsize = 8)
+        count = 1
+        new = file.loc[file['Your industry'] == industries[industry]]
+        basewidth = 25
+        for i in new['Logo']:
+            png = i.split('/', 1)[-1].replace('/', '')
+            r = requests.get(i, stream  = True)
+            with open('logos/'+png, 'wb') as out_file:
+                shutil.copyfileobj(r.raw, out_file) 
+            del r
+            img = Image.open('logos/'+png)
+            wpercent = (basewidth/float(img.size[0]))
+            hsize = int((float(img.size[1])*float(wpercent)))
+            img = img.resize((basewidth,hsize), Image.ANTIALIAS)
+            img.save('logos/'+png) 
+            arr_AS = mpimg.imread('logos/'+png)
+            imagebox = OffsetImage(arr_AS)
+            if count == 1:
+                x, y  = 0.2, 0.2
+            if count > 1 and count < 4:
+                x += 0.3
+            if count  == 4:
+                x = 0.2
+                y = 0.5
+            if count > 4 and count < 7:
+                x += 0.3
+            if count  == 7:
+                x = 0.2
+                y = 0.8
+            if count > 8 and count < 10:
+                x += 0.3
+            if count == 10:
+                x, y  = 0.2, 0.2
+                count = 1
+                break
+            AS = AnnotationBbox(imagebox, (x, y))
+            count += 1
+            _.add_artist(AS)
+            
+    def industry_graph(self):
+        plt.clf()
+        plt.close()
+        labels = []
+        for i in industries:
+            if '&' in i:
+                labels.append(i.replace(' & ', '\n'))
+            else:
+                labels.append(i)
+        real_labels = industries
+        numbers = []
+        x = np.arange(len(labels))
+        for i in real_labels:
+            if len(file[file['Your industry'] == i]) > 0:
+                numbers.append(len(file[file['Your industry'] == i]))
+        width = 0.7
+        fig, ax = plt.subplots()
+        rect = ax.bar(x, numbers, width, label='Industries')
+        ax.set_ylabel('Number of Startups')
+        #ax.set_title('Stages of Startups')
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels)
+        for i in rect:
+            height = i.get_height()
+            ax.annotate('{}'.format(height),
+                        xy=(i.get_x() + i.get_width() / 2, height),
+                        xytext=(0, 0.2),
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+        ax.legend()
+        plt.tick_params(axis='x', which='major', labelsize = 7.5)
+        fig.tight_layout()
+        plt.savefig('images/industry_graph.png', bbox_inches='tight')
+        plt.show()
+    
     def stages_graph(self):
         plt.clf()
         plt.close()
@@ -155,56 +230,32 @@ class graph():
         plt.savefig('images/product_focus.png', bbox_inches='tight')
         plt.show()
 
-    def image_placer(self, _, industry):
-        count = 1
-        new = file.loc[file['Your industry'] == industries[industry]]
-        basewidth = 25
-        for i in new['Logo']:
-            png = i.split('/', 1)[-1].replace('/', '')
-            r = requests.get(i, stream  = True)
-            with open('logos/'+png, 'wb') as out_file:
-                shutil.copyfileobj(r.raw, out_file) 
-            del r
-            img = Image.open('logos/'+png)
-            wpercent = (basewidth/float(img.size[0]))
-            hsize = int((float(img.size[1])*float(wpercent)))
-            img = img.resize((basewidth,hsize), Image.ANTIALIAS)
-            img.save('logos/'+png) 
-            arr_AS = mpimg.imread('logos/'+png)
-            imagebox = OffsetImage(arr_AS)
-            if count == 1:
-                x, y  = 0.2, 0.2
-            if count > 1 and count < 4:
-                x += 0.3
-            if count  == 4:
-                x = 0.2
-                y = 0.5
-            if count > 4 and count < 7:
-                x += 0.3
-            if count  == 7:
-                x = 0.2
-                y = 0.8
-            if count > 8 and count < 10:
-                x += 0.3
-            if count == 10:
-                x, y  = 0.2, 0.2
-                count = 1
-                break
-            AS = AnnotationBbox(imagebox, (x, y))
-            count += 1
-            _.add_artist(AS)
+    
 
 # Step 3 - Create Text and input all files and text into Word document 
 #r.add_text('Ecosystem Report for {0}, {1}, {2} and {3}'.format(*industries))
 def ecosystem_map():
     global document
     document = Document()
+    document.add_paragraph('Ecosystem Report', style='Title')
+    p = document.add_paragraph()
+    p.add_run('Successful collaboration begins with choosing the right startups for your innovation initiatives! This report provides an overview of the 4 following industries:')
+    document.add_paragraph()
+    for i in industries:
+        document.add_paragraph(i, style='List Bullet')
+    document.add_paragraph()
     p = document.add_paragraph()
     p.alignment = 1
     r = p.add_run()
-    r.add_text('Ecosystem Report')
-    r.font.size = Pt(20)
+    r.add_text('Ecosystem Map')
+    r.font.size = Pt(14)
     r.bold = True
+    p = document.add_paragraph()
+    p.alignment = 1
+    r = p.add_run()
+    r.add_text('Visual Representation of the Startups')
+    r.font.size = Pt(10)
+    r.italic = True
     p1 = document.add_paragraph()
     p1.alignment = 1
     r = p1.add_run()
@@ -218,13 +269,27 @@ def stages():
     r.add_text('Stages of Startups')
     r.font.size = Pt(14)
     r.bold = True
-    document.add_paragraph()
+    document.add_paragraph() 
     p1 = document.add_paragraph()
     p1.alignment = 1
     r = p1.add_run()
     r.add_picture('images/stages_bar.png', width=Inches(5), height=Inches(3)) 
     document.add_paragraph()
 
+def industry():
+    p = document.add_paragraph()
+    p.alignment = 1
+    r = p.add_run()
+    r.add_text('Industry Overview')
+    r.font.size = Pt(14)
+    r.bold = True
+    document.add_paragraph()
+    p1 = document.add_paragraph()
+    p1.alignment = 1
+    r = p1.add_run()
+    r.add_picture('images/industry_graph.png', width=Inches(5), height=Inches(3)) 
+    document.add_paragraph()
+    
 def funding():
     p = document.add_paragraph()
     p.alignment = 1
@@ -307,10 +372,12 @@ def launch():
     print(industries)
     g = graph()
     g.boxes()
+    g.industry_graph()
     g.stages_graph()
     g.funding()
     g.product_focus()
     ecosystem_map()
+    industry()
     stages()
     funding()
     product()
