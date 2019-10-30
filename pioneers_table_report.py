@@ -9,8 +9,10 @@ from docx import Document
 from docx.shared import Inches
 from PIL import Image
 from docx.shared import Cm, Pt, Mm
-from docx.enum.text import WD_BREAK, WD_LINE_SPACING
+from docx.enum.text import WD_BREAK, WD_LINE_SPACING, WD_ALIGN_PARAGRAPH
 from docx.enum.style import WD_STYLE_TYPE
+from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+from os import path
 
 # Step 1 - Extract variables from Json file and create dictionaries
 # Convert from Excel to CSV, remove unneeded columns, only leave 1 industry
@@ -106,17 +108,20 @@ class graph():
         plt.clf()
         plt.close()
         labels = []
+        global overal_number
+        overal_number = 0
         for i in industries:
             if '&' in i:
-                labels.append(i.replace(' & ', '\n'))
+                labels.append(i.replace(' & ', '\n').replace(' ', '\n'))
             else:
-                labels.append(i)
+                labels.append(i.replace(' ', '\n'))
         real_labels = industries
         numbers = []
         x = np.arange(len(labels))
         for i in real_labels:
             if len(file[file['Your industry'] == i]) > 0:
                 numbers.append(len(file[file['Your industry'] == i]))
+                overal_number += len(file[file['Your industry'] == i])
         width = 0.7
         fig, ax = plt.subplots()
         rect = ax.bar(x, numbers, width, label='Industries')
@@ -132,7 +137,7 @@ class graph():
                         textcoords="offset points",
                         ha='center', va='bottom')
         ax.legend()
-        plt.tick_params(axis='x', which='major', labelsize = 7.5)
+        plt.tick_params(axis='x', which='major', labelsize = 9)
         fig.tight_layout()
         plt.savefig('images/industry_graph.png', bbox_inches='tight')
         plt.show()
@@ -229,40 +234,75 @@ class graph():
         fig.tight_layout()
         plt.savefig('images/product_focus.png', bbox_inches='tight')
         plt.show()
-
-    
-
+        
+    def word_cloud(self):
+        plt.clf()
+        plt.close()
+        wordcloud_mask = np.array(Image.open('images/wordcloud_mask.png'))
+        wordcloud_mask[wordcloud_mask == 0] = 255
+        stopwords = set(STOPWORDS)
+        stopwords.update(['client', 'customer', 'use', 'service', 'based', 'product', 'will', 'is', 'are', 'offer', 'company', 'use', 'project', 'provide', 'new'])
+        wordcloud = WordCloud(mask = wordcloud_mask, stopwords=stopwords, max_words=80, background_color="white", contour_width=0, contour_color='black').generate(' '.join(file['Description']))
+        plt.figure(figsize=[10,10])
+        plt.imshow(wordcloud, interpolation='bilinear')
+        plt.axis("off")
+        plt.show()
+        wordcloud.to_file("images/wordcloud.png")
+        
 # Step 3 - Create Text and input all files and text into Word document 
 #r.add_text('Ecosystem Report for {0}, {1}, {2} and {3}'.format(*industries))
-def ecosystem_map():
+def first_page():
     global document
     document = Document()
+    section = document.sections[0]
+    header = section.header
+    p = header.paragraphs[0]
+    r= p.add_run()
+    r.add_picture('images/zero21_header.png', width=Inches(0.2), height=Inches(0.4))
+    p.alignment = 2
+    for i in range(0, 6):
+        document.add_paragraph()
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_text('Ecosystem Report')
+    r.font.size = Pt(25)
+    r.bold = True
+    p.alignment = 1
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_picture('images/wordcloud.png', width=Inches(6), height=Inches(6))
+    r.add_break(WD_BREAK.PAGE)
+
+def ecosystem_map():   
     document.add_paragraph('Ecosystem Report', style='Title')
     p = document.add_paragraph()
     p.add_run('Successful collaboration begins with choosing the right startups for your innovation initiatives! This report provides an overview of the 4 following industries:')
-    document.add_paragraph()
     for i in industries:
         document.add_paragraph(i, style='List Bullet')
-    document.add_paragraph()
     p = document.add_paragraph()
-    p.alignment = 1
     r = p.add_run()
-    r.add_text('Ecosystem Map')
-    r.font.size = Pt(14)
-    r.bold = True
+    r.add_picture('images/ecosystem_map.png', width=Inches(5), height=Inches(3))
+    p.alignment = 1
+    document.add_paragraph() 
+
+def industry():
+    #Compicated way to add images to table cells
+    table = document.add_table(1, 2)
+    cells = table.rows[0].cells
+    paragraph = cells[0].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_text('There is a total number of {} startups coming from {} industries that were selected. The graph on the right creates a useful guideline about the competition in the market, what industries are oversaturated with startups and what still require the corporate support'.format(overal_number, len(industries)))
+    paragraph = cells[1].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_picture('images/industry_graph.png', width=Inches(3.5), height=Inches(2))
+    last_paragraph = document.paragraphs[-1] 
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p = document.add_paragraph()
-    p.alignment = 1
     r = p.add_run()
-    r.add_text('Visual Representation of the Startups')
-    r.font.size = Pt(10)
-    r.italic = True
-    p1 = document.add_paragraph()
-    p1.alignment = 1
-    r = p1.add_run()
-    r.add_picture('images/ecosystem_map.png') 
-    document.add_paragraph()
+    r.add_break(WD_BREAK.PAGE)
 
 def stages():
+    document.add_paragraph('Facts and Figures', style='Title')
     p = document.add_paragraph()
     p.alignment = 1
     r = p.add_run()
@@ -274,20 +314,6 @@ def stages():
     p1.alignment = 1
     r = p1.add_run()
     r.add_picture('images/stages_bar.png', width=Inches(5), height=Inches(3)) 
-    document.add_paragraph()
-
-def industry():
-    p = document.add_paragraph()
-    p.alignment = 1
-    r = p.add_run()
-    r.add_text('Industry Overview')
-    r.font.size = Pt(14)
-    r.bold = True
-    document.add_paragraph()
-    p1 = document.add_paragraph()
-    p1.alignment = 1
-    r = p1.add_run()
-    r.add_picture('images/industry_graph.png', width=Inches(5), height=Inches(3)) 
     document.add_paragraph()
     
 def funding():
@@ -359,7 +385,7 @@ def table_maker(_):
 def launch():
     csv_from_excel()
     remove_cols()
-    file = pd.read_csv('csv_files/new_csv.csv')
+    file = pd.read_csv('csv_files/new_csv.csv', index_col=0)
     file['Your industry'] = file['Your industry'].apply(coma_remove)
     print(file.head(20))
     global industries
@@ -376,6 +402,8 @@ def launch():
     g.stages_graph()
     g.funding()
     g.product_focus()
+    g.word_cloud()
+    first_page()
     ecosystem_map()
     industry()
     stages()
