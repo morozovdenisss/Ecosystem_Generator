@@ -27,13 +27,14 @@ def csv_from_excel():
     
 def remove_cols():
     f=pd.read_csv("csv_files/csv_file.csv")
-    keep_col = ['Company Name', 'Domain', 'Description', 'Logo', 'Your industry', 'What is the current stage of your startup?', 'Total funding received in €', 'Product focus']
+    keep_col = ['Company Name', 'Domain', 'Description', 'Logo', 'Your industry', 'What is the current stage of your startup?', 'Total funding received in €', 'Customer focus', 'Product focus', 'Country of incorporation / registration']
     new_f = f[keep_col]
     new_f = new_f.dropna()
-    new_f.to_csv("csv_files/new_csv.csv", index=False)
+    new_f.to_csv("csv_files/new_csv.csv", index=True)
     
 def coma_remove(item):
-    item = item.split(',', 1)[0].replace(',', '')
+    if ',' in item:
+        item = item.split(',', 1)[0].replace(',', '')
     return str(item)
 
 #Step 2 - Plot the graphs, iterate dictionaries, get logos, input into table
@@ -41,23 +42,18 @@ class graph():
     def boxes(self):        
         fig = plt.figure(constrained_layout=True, dpi=200)
         gs = GridSpec(2, 2, figure=fig)
-        
         ax1 = fig.add_subplot(gs[0, 0])
         industry = 0
         self.image_placer(ax1, industry)
-            
         ax2 = fig.add_subplot(gs[0, 1])
         industry = 1
         self.image_placer(ax2, industry)
-
         ax3 = fig.add_subplot(gs[1, 0])
         industry = 2
         self.image_placer(ax3, industry)
-        
         ax4 = fig.add_subplot(gs[1, 1])
         industry = 3
         self.image_placer(ax4, industry)
-        
         #fig.suptitle("Ecosystem Map")
         for i, ax in enumerate(fig.axes):
             ax.tick_params(labelbottom=False, labelleft=False, bottom = False, left = False)
@@ -109,6 +105,7 @@ class graph():
         plt.close()
         labels = []
         global overal_number
+        global numbers_industry
         overal_number = 0
         for i in industries:
             if '&' in i:
@@ -116,17 +113,16 @@ class graph():
             else:
                 labels.append(i.replace(' ', '\n'))
         real_labels = industries
-        numbers = []
+        numbers_industry = []
         x = np.arange(len(labels))
         for i in real_labels:
             if len(file[file['Your industry'] == i]) > 0:
-                numbers.append(len(file[file['Your industry'] == i]))
+                numbers_industry.append(len(file[file['Your industry'] == i]))
                 overal_number += len(file[file['Your industry'] == i])
         width = 0.7
         fig, ax = plt.subplots()
-        rect = ax.bar(x, numbers, width, label='Industries')
-        ax.set_ylabel('Number of Startups')
-        #ax.set_title('Stages of Startups')
+        rect = ax.bar(x, numbers_industry, width, label='Industries')
+        #ax.set_ylabel('Number of Startups')
         ax.set_xticks(x)
         ax.set_xticklabels(labels)
         for i in rect:
@@ -137,7 +133,7 @@ class graph():
                         textcoords="offset points",
                         ha='center', va='bottom')
         ax.legend()
-        plt.tick_params(axis='x', which='major', labelsize = 9)
+        plt.tick_params(axis='x', which='major', labelsize = 9, bottom = False)
         fig.tight_layout()
         plt.savefig('images/industry_graph.png', bbox_inches='tight')
         plt.show()
@@ -145,17 +141,18 @@ class graph():
     def stages_graph(self):
         plt.clf()
         plt.close()
+        global numbers_stages
         labels = ['Concept\n Stage', 'Seed\n Stage', 'Early\n Stage', 'Growth\n Stage', 'Established\n Business']
         real_labels = ['Concept Stage (got an idea)', 'Seed Stage (working on a product)', 'Early Stage (prototype ready and close to market)', 'Growth Stage (we\'re out there and making money)', 'Established Business (achieved break-even point operationally)']
-        numbers = []
+        numbers_stages = []
         x = np.arange(len(labels))
         for i in real_labels:
             if len(file[file['What is the current stage of your startup?'] == i]) > 0:
-                numbers.append(len(file[file['What is the current stage of your startup?'] == i]))
+                numbers_stages.append(len(file[file['What is the current stage of your startup?'] == i]))
         width = 0.7
         fig, ax = plt.subplots()
-        rect = ax.bar(x, numbers, width, label='Startups')
-        ax.set_ylabel('Number of Startups')
+        rect = ax.bar(x, numbers_stages, width, label='Startups')
+        #ax.set_ylabel('Number of Startups')
         #ax.set_title('Stages of Startups')
         ax.set_xticks(x)
         ax.set_xticklabels(labels)
@@ -174,20 +171,29 @@ class graph():
     def funding(self):
         plt.clf()
         plt.close()
+        global numbers_adapted
         labels = ['25k', '75k', '125k', '200k', '300k', '500k', '800k', '1M', '1.5M', '2M', '2.5M', '3M', '5M', '10M', '10+M']
         real_labels = ['1-25k', '26 - 75k', '76 - 125k', '126 - 200k', '201 - 300k', '301 - 500k', '501 - 800k', '801k - 1 M', '1 - 1.5 M', '1.5 - 2 M', '2 - 2.5 M', '2.5 - 3 M', '3 - 5 M', '5 - 10 M', '10+ M']
         x = np.arange(len(labels))
-        numbers = []
+        numbers_funding = []
+        numbers_adapted = []
         for i in real_labels:
             if len(file[file['Total funding received in €'] == i]) > 0:
-                numbers.append(len(file[file['Total funding received in €'] == i]))
+                numbers_funding.append(len(file[file['Total funding received in €'] == i]))
             if len(file[file['Total funding received in €'] == i]) == 0:
-                numbers.append(0)
+                numbers_funding.append(0)
+        n = numbers_funding[0] + numbers_funding[1] + numbers_funding[2] + numbers_funding[3]
+        numbers_adapted.append(n)
+        n = numbers_funding[4] + numbers_funding[5] + numbers_funding[6] + numbers_funding[7]
+        numbers_adapted.append(n)
+        n = numbers_funding[8] + numbers_funding[9] + numbers_funding[10] + numbers_funding[11]
+        numbers_adapted.append(n)
+        n = numbers_funding[12] + numbers_funding[13] + numbers_funding[14]
+        numbers_adapted.append(n)
         width = 0.5
         fig, ax = plt.subplots()
-        rect = ax.bar(x, numbers, width, label='Funding')
-        ax.set_ylabel('Number of Startups')
-        #ax.set_title('Funding of Startups')
+        rect = ax.bar(x, numbers_funding, width, label='Funding')
+        #ax.set_ylabel('Number of Startups')
         ax.set_xticks(x)
         ax.set_xticklabels(labels)
         for i in rect:
@@ -206,20 +212,20 @@ class graph():
     def product_focus(self):
         plt.clf()
         plt.close()
-        labels = ['Software', 'Hardware', 'Other']
+        global numbers_product
+        labels = ['Software', 'Hardware', 'Others']
         real_labels = ['Software application', 'Physical product', 'Something else']
         x = np.arange(len(labels))
-        numbers = []
+        numbers_product = []
         for i in real_labels:
             if len(file[file['Product focus'] == i]) > 0:
-                numbers.append(len(file[file['Product focus'] == i]))
+                numbers_product.append(len(file[file['Product focus'] == i]))
             if len(file[file['Product focus'] == i]) == 0:
-                numbers.append(0)
+                numbers_product.append(0)
         width = 0.5
         fig, ax = plt.subplots()
-        rect = ax.bar(x, numbers, width, label='Product')
-        ax.set_ylabel('Number of Startups')
-        #ax.set_title('Funding of Startups')
+        rect = ax.bar(x, numbers_product, width, label='Product')
+        #ax.set_ylabel('Number of Startups')
         ax.set_xticks(x)
         ax.set_xticklabels(labels)
         for i in rect:
@@ -234,6 +240,74 @@ class graph():
         fig.tight_layout()
         plt.savefig('images/product_focus.png', bbox_inches='tight')
         plt.show()
+    
+    def customer_focus(self):
+        plt.clf()
+        plt.close()
+        global numbers_customer
+        labels = ['B2C', 'B2B', 'B2G']
+        real_labels = ['B2C', 'B2B', 'B2G']
+        x = np.arange(len(labels))
+        numbers_customer = []
+        for i in real_labels:
+            if len(file[file['Customer focus'] == i]) > 0:
+                numbers_customer.append(len(file[file['Customer focus'] == i]))
+            if len(file[file['Customer focus'] == i]) == 0:
+                numbers_customer.append(0)
+        width = 0.5
+        fig, ax = plt.subplots()
+        rect = ax.bar(x, numbers_customer, width, label='Customers')
+        #ax.set_ylabel('Number of Startups')
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels)
+        for i in rect:
+            height = i.get_height()
+            ax.annotate('{}'.format(height),
+                        xy=(i.get_x() + i.get_width() / 2, height),
+                        xytext=(0, 0.2),
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+        ax.legend()
+        plt.tick_params(axis='x', which='major', labelsize = 9)
+        fig.tight_layout()
+        plt.savefig('images/customer_focus.png', bbox_inches='tight')
+        plt.show()
+    ''' Object Missmatch
+    def country_graph(self):
+        plt.clf()
+        plt.close()
+        real_labels = []
+        numbers = []
+        for i in file['Country of incorporation / registration']:
+            if ',' in real_labels:
+                i.apply(coma_remove)
+            if i not in real_labels:
+                real_labels.append(i)
+        for i in real_labels:
+            if len(file[file['Country of incorporation / registration'] == i]) > 0:
+                numbers.append(len(file[file['Country of incorporation / registration'] == i]))
+            if len(file[file['Country of incorporation / registration'] == i]) == 0:
+                numbers.append(0)
+        x = np.arange(len(real_labels))
+        width = 0.5
+        fig, ax = plt.subplots()
+        rect = ax.bar(x, numbers_customer, width, label='Countries')
+        #ax.set_ylabel('Number of Startups')
+        ax.set_xticks(x)
+        ax.set_xticklabels(real_labels)
+        for i in rect:
+            height = i.get_height()
+            ax.annotate('{}'.format(height),
+                        xy=(i.get_x() + i.get_width() / 2, height),
+                        xytext=(0, 0.2),
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+        ax.legend()
+        plt.tick_params(axis='x', which='major', labelsize = 9)
+        fig.tight_layout()
+        plt.savefig('images/country_graph.png', bbox_inches='tight')
+        plt.show()
+    '''
         
     def word_cloud(self):
         plt.clf()
@@ -250,10 +324,10 @@ class graph():
         wordcloud.to_file("images/wordcloud.png")
         
 # Step 3 - Create Text and input all files and text into Word document 
-#r.add_text('Ecosystem Report for {0}, {1}, {2} and {3}'.format(*industries))
 def first_page():
     global document
     document = Document()
+    '''
     section = document.sections[0]
     header = section.header
     p = header.paragraphs[0]
@@ -262,6 +336,7 @@ def first_page():
     p.alignment = 2
     for i in range(0, 6):
         document.add_paragraph()
+    '''
     p = document.add_paragraph()
     r = p.add_run()
     r.add_text('Ecosystem Report')
@@ -287,6 +362,107 @@ def ecosystem_map():
 
 def industry():
     #Compicated way to add images to table cells
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_text('Area of Operations')
+    r.bold = True
+    r.font.size = Pt(16)
+    table = document.add_table(1, 2)
+    cells = table.rows[0].cells
+    paragraph = cells[0].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_text('There is a total number of {} startups coming from {} industries: {} from {} | {} from {} | {} from {} | {} from {}'.format(overal_number, len(industries), numbers_industry[0], industries[0], numbers_industry[1], industries[1], numbers_industry[2], industries[2], numbers_industry[3], industries[3]))
+    paragraph = cells[1].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_picture('images/industry_graph.png', width = Inches(3.6), height = Inches(2.2))
+    last_paragraph = document.paragraphs[-1] 
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_break(WD_BREAK.PAGE)
+
+def country():
+    document.add_paragraph('Country, Stage and Funding', style='Title')
+    '''
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_text('Countries')
+    r.bold = True
+    r.font.size = Pt(16)
+    table = document.add_table(1, 2)
+    cells = table.rows[0].cells
+    paragraph = cells[0].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_text('{} Software | {} Hardware | {} Other'.format(numbers_product[0], numbers_product[1], numbers_product[2]))
+    paragraph = cells[1].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_picture('images/country_graph.png', width = Inches(3.6), height = Inches(2.2))
+    last_paragraph = document.paragraphs[-1] 
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER'''
+    
+def stages():
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_text('Stages - from Idea to Established Business')
+    r.bold = True
+    r.font.size = Pt(16)
+    table = document.add_table(1, 2)
+    cells = table.rows[0].cells
+    paragraph = cells[0].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_text('{} Concept Stage | {} Seed Stage | {} Early Stage | {} Growth Stage | {} Established Businesses'.format(numbers_stages[0], numbers_stages[1], numbers_stages[2], numbers_stages[3], numbers_stages[4]))
+    paragraph = cells[1].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_picture('images/stages_bar.png', width = Inches(3.6), height = Inches(2.2))
+    last_paragraph = document.paragraphs[-1] 
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p = document.add_paragraph()
+    r = p.add_run()
+    
+def funding():
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_text('Funding')
+    r.bold = True
+    r.font.size = Pt(16)
+    table = document.add_table(1, 2)
+    cells = table.rows[0].cells
+    paragraph = cells[0].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_text('{} Pre-Seed (1-200k) | {} Seed (200- 1 Mil) | {} Series A (1-3  Mil) | {} Series B (>3 Mil)'.format(numbers_adapted[0],numbers_adapted[1],numbers_adapted[2],numbers_adapted[3]))
+    paragraph = cells[1].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_picture('images/funding_bar.png', width = Inches(3.6), height = Inches(2.2))
+    last_paragraph = document.paragraphs[-1] 
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+def product():
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_break(WD_BREAK.PAGE)
+    document.add_paragraph('Product and Customer Focus', style='Title')
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_text('Product Focus')
+    r.bold = True
+    r.font.size = Pt(16)
+    table = document.add_table(1, 2)
+    cells = table.rows[0].cells
+    paragraph = cells[0].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_text('{} Software | {} Hardware | {} Other'.format(numbers_product[0], numbers_product[1], numbers_product[2]))
+    paragraph = cells[1].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_picture('images/product_focus.png', width = Inches(3.6), height = Inches(2.2))
+    last_paragraph = document.paragraphs[-1] 
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+def customer():
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_text('Customer Focus')
+    r.bold = True
+    r.font.size = Pt(16)
     table = document.add_table(1, 2)
     cells = table.rows[0].cells
     paragraph = cells[0].paragraphs[0]
@@ -294,56 +470,13 @@ def industry():
     run.add_text('There is a total number of {} startups coming from {} industries that were selected. The graph on the right creates a useful guideline about the competition in the market, what industries are oversaturated with startups and what still require the corporate support'.format(overal_number, len(industries)))
     paragraph = cells[1].paragraphs[0]
     run = paragraph.add_run()
-    run.add_picture('images/industry_graph.png', width=Inches(3.5), height=Inches(2))
+    run.add_picture('images/customer_focus.png', width = Inches(3.6), height = Inches(2.2))
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p = document.add_paragraph()
     r = p.add_run()
     r.add_break(WD_BREAK.PAGE)
-
-def stages():
-    document.add_paragraph('Facts and Figures', style='Title')
-    p = document.add_paragraph()
-    p.alignment = 1
-    r = p.add_run()
-    r.add_text('Stages of Startups')
-    r.font.size = Pt(14)
-    r.bold = True
-    document.add_paragraph() 
-    p1 = document.add_paragraph()
-    p1.alignment = 1
-    r = p1.add_run()
-    r.add_picture('images/stages_bar.png', width=Inches(5), height=Inches(3)) 
-    document.add_paragraph()
     
-def funding():
-    p = document.add_paragraph()
-    p.alignment = 1
-    r = p.add_run()
-    r.add_text('Funding of Startups')
-    r.font.size = Pt(14)
-    r.bold = True
-    document.add_paragraph()
-    p1 = document.add_paragraph()
-    p1.alignment = 1
-    r = p1.add_run()
-    r.add_picture('images/funding_bar.png', width=Inches(5), height=Inches(3)) 
-    document.add_paragraph()
-
-def product():
-    p = document.add_paragraph()
-    p.alignment = 1
-    r = p.add_run()
-    r.add_text('Product Focus')
-    r.font.size = Pt(14)
-    r.bold = True
-    document.add_paragraph()
-    p1 = document.add_paragraph()
-    p1.alignment = 1
-    r = p1.add_run()
-    r.add_picture('images/product_focus.png', width=Inches(5), height=Inches(3)) 
-    document.add_paragraph()
-
 def set_column_width(column, width):
     column.width = width
     for cell in column.cells:
@@ -385,6 +518,7 @@ def table_maker(_):
 def launch():
     csv_from_excel()
     remove_cols()
+    global file
     file = pd.read_csv('csv_files/new_csv.csv', index_col=0)
     file['Your industry'] = file['Your industry'].apply(coma_remove)
     print(file.head(20))
@@ -402,18 +536,20 @@ def launch():
     g.stages_graph()
     g.funding()
     g.product_focus()
+    g.customer_focus()
+    #g.country_graph()
     g.word_cloud()
     first_page()
     ecosystem_map()
     industry()
+    #country()
     stages()
     funding()
     product()
+    customer()
     for i in range(0, 3):
         table_maker(i)
     document.save('Report.docx')
 
 # Need to figure out how to change .docx into .pdf
 launch()
-
-
