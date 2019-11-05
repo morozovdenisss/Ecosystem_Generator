@@ -4,16 +4,14 @@ from matplotlib.gridspec import GridSpec
 import matplotlib.image as mpimg
 import numpy as np
 import pandas as pd
-import xlrd, csv, requests, shutil, os
+import xlrd, csv, requests, shutil
 from docx import Document
 from docx.shared import Inches
 from PIL import Image
-from docx.shared import Cm, Pt, Mm
+from docx.shared import Pt
 from docx.enum.text import WD_BREAK, WD_LINE_SPACING, WD_ALIGN_PARAGRAPH
 from docx.enum.style import WD_STYLE_TYPE
-from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
-from os import path
-
+from wordcloud import WordCloud, STOPWORDS
 # Step 1 - Extract variables from Json file and create dictionaries
 # Convert from Excel to CSV, remove unneeded columns, only leave 1 industry
 def csv_from_excel():
@@ -133,7 +131,8 @@ class graph():
                         textcoords="offset points",
                         ha='center', va='bottom')
         ax.legend()
-        plt.tick_params(axis='x', which='major', labelsize = 9, bottom = False)
+        ax.tick_params(left=False, labelleft=False, bottom=False)
+        plt.tick_params(axis='x', which='major', labelsize = 10)
         fig.tight_layout()
         plt.savefig('images/industry_graph.png', bbox_inches='tight')
         plt.show()
@@ -164,6 +163,7 @@ class graph():
                         textcoords="offset points",
                         ha='center', va='bottom')
         ax.legend()
+        ax.tick_params(left=False, labelleft=False, bottom=False)
         fig.tight_layout()
         plt.savefig('images/stages_bar.png', bbox_inches='tight')
         plt.show()
@@ -204,6 +204,7 @@ class graph():
                         textcoords="offset points",
                         ha='center', va='bottom')
         ax.legend()
+        ax.tick_params(left=False, labelleft=False, bottom=False)
         plt.tick_params(axis='x', which='major', labelsize = 9)
         fig.tight_layout()
         plt.savefig('images/funding_bar.png', bbox_inches='tight')
@@ -236,6 +237,7 @@ class graph():
                         textcoords="offset points",
                         ha='center', va='bottom')
         ax.legend()
+        ax.tick_params(left=False, labelleft=False, bottom=False)
         plt.tick_params(axis='x', which='major', labelsize = 9)
         fig.tight_layout()
         plt.savefig('images/product_focus.png', bbox_inches='tight')
@@ -268,46 +270,52 @@ class graph():
                         textcoords="offset points",
                         ha='center', va='bottom')
         ax.legend()
+        ax.tick_params(left=False, labelleft=False, bottom=False)
         plt.tick_params(axis='x', which='major', labelsize = 9)
         fig.tight_layout()
         plt.savefig('images/customer_focus.png', bbox_inches='tight')
         plt.show()
-    ''' Object Missmatch
+
     def country_graph(self):
         plt.clf()
         plt.close()
         real_labels = []
-        numbers = []
-        for i in file['Country of incorporation / registration']:
-            if ',' in real_labels:
-                i.apply(coma_remove)
-            if i not in real_labels:
-                real_labels.append(i)
-        for i in real_labels:
-            if len(file[file['Country of incorporation / registration'] == i]) > 0:
-                numbers.append(len(file[file['Country of incorporation / registration'] == i]))
-            if len(file[file['Country of incorporation / registration'] == i]) == 0:
-                numbers.append(0)
+        numbers = []      
+        group = file.groupby('Country of incorporation / registration').size()
+        for i, v in group.items():
+            if ',' in  i:
+                new = i.split(',', 1)[0].replace(',', '')
+                if 'Bosnia' in new:
+                    new = 'B&H'
+                if new not in real_labels:
+                    real_labels.append(new)
+                    numbers.append(v)
+            if ',' not in i:
+                if 'Bosnia' in i:
+                    i = 'B&H'
+                if i not in real_labels:
+                    real_labels.append(i)
+                    numbers.append(v)
         x = np.arange(len(real_labels))
         width = 0.5
         fig, ax = plt.subplots()
-        rect = ax.bar(x, numbers_customer, width, label='Countries')
+        rect = ax.bar(x, numbers, width, label='Countries')
         #ax.set_ylabel('Number of Startups')
         ax.set_xticks(x)
-        ax.set_xticklabels(real_labels)
+        ax.set_xticklabels(real_labels, rotation='vertical')
         for i in rect:
             height = i.get_height()
             ax.annotate('{}'.format(height),
                         xy=(i.get_x() + i.get_width() / 2, height),
-                        xytext=(0, 0.2),
+                        xytext=(0, 0),
                         textcoords="offset points",
                         ha='center', va='bottom')
         ax.legend()
+        ax.tick_params(left=False, labelleft=False, bottom=False)
         plt.tick_params(axis='x', which='major', labelsize = 9)
         fig.tight_layout()
         plt.savefig('images/country_graph.png', bbox_inches='tight')
         plt.show()
-    '''
         
     def word_cloud(self):
         plt.clf()
@@ -327,16 +335,12 @@ class graph():
 def first_page():
     global document
     document = Document()
-    '''
     section = document.sections[0]
-    header = section.header
-    p = header.paragraphs[0]
+    footer = section.footer
+    p = footer.paragraphs[0]
     r= p.add_run()
-    r.add_picture('images/zero21_header.png', width=Inches(0.2), height=Inches(0.4))
-    p.alignment = 2
-    for i in range(0, 6):
-        document.add_paragraph()
-    '''
+    r.add_picture('images/pioneers_logo.png', width=Inches(0.9), height=Inches(0.5))
+    p.alignment = 1
     p = document.add_paragraph()
     r = p.add_run()
     r.add_text('Ecosystem Report')
@@ -361,7 +365,6 @@ def ecosystem_map():
     document.add_paragraph() 
 
 def industry():
-    #Compicated way to add images to table cells
     p = document.add_paragraph()
     r = p.add_run()
     r.add_text('Area of Operations')
@@ -374,7 +377,7 @@ def industry():
     run.add_text('There is a total number of {} startups coming from {} industries: {} from {} | {} from {} | {} from {} | {} from {}'.format(overal_number, len(industries), numbers_industry[0], industries[0], numbers_industry[1], industries[1], numbers_industry[2], industries[2], numbers_industry[3], industries[3]))
     paragraph = cells[1].paragraphs[0]
     run = paragraph.add_run()
-    run.add_picture('images/industry_graph.png', width = Inches(3.6), height = Inches(2.2))
+    run.add_picture('images/industry_graph.png', width = Inches(2.95), height = Inches(2))
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p = document.add_paragraph()
@@ -383,22 +386,11 @@ def industry():
 
 def country():
     document.add_paragraph('Country, Stage and Funding', style='Title')
-    '''
     p = document.add_paragraph()
     r = p.add_run()
-    r.add_text('Countries')
-    r.bold = True
-    r.font.size = Pt(16)
-    table = document.add_table(1, 2)
-    cells = table.rows[0].cells
-    paragraph = cells[0].paragraphs[0]
-    run = paragraph.add_run()
-    run.add_text('{} Software | {} Hardware | {} Other'.format(numbers_product[0], numbers_product[1], numbers_product[2]))
-    paragraph = cells[1].paragraphs[0]
-    run = paragraph.add_run()
-    run.add_picture('images/country_graph.png', width = Inches(3.6), height = Inches(2.2))
+    r.add_picture('images/country_graph.png', width = Inches(4.8), height = Inches(2.6))
     last_paragraph = document.paragraphs[-1] 
-    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER'''
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
 def stages():
     p = document.add_paragraph()
@@ -413,11 +405,9 @@ def stages():
     run.add_text('{} Concept Stage | {} Seed Stage | {} Early Stage | {} Growth Stage | {} Established Businesses'.format(numbers_stages[0], numbers_stages[1], numbers_stages[2], numbers_stages[3], numbers_stages[4]))
     paragraph = cells[1].paragraphs[0]
     run = paragraph.add_run()
-    run.add_picture('images/stages_bar.png', width = Inches(3.6), height = Inches(2.2))
+    run.add_picture('images/stages_bar.png', width = Inches(2.95), height = Inches(2))
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p = document.add_paragraph()
-    r = p.add_run()
     
 def funding():
     p = document.add_paragraph()
@@ -432,7 +422,7 @@ def funding():
     run.add_text('{} Pre-Seed (1-200k) | {} Seed (200- 1 Mil) | {} Series A (1-3  Mil) | {} Series B (>3 Mil)'.format(numbers_adapted[0],numbers_adapted[1],numbers_adapted[2],numbers_adapted[3]))
     paragraph = cells[1].paragraphs[0]
     run = paragraph.add_run()
-    run.add_picture('images/funding_bar.png', width = Inches(3.6), height = Inches(2.2))
+    run.add_picture('images/funding_bar.png', width = Inches(2.95), height = Inches(2))
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
@@ -453,7 +443,7 @@ def product():
     run.add_text('{} Software | {} Hardware | {} Other'.format(numbers_product[0], numbers_product[1], numbers_product[2]))
     paragraph = cells[1].paragraphs[0]
     run = paragraph.add_run()
-    run.add_picture('images/product_focus.png', width = Inches(3.6), height = Inches(2.2))
+    run.add_picture('images/product_focus.png', width = Inches(2.95), height = Inches(2))
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
@@ -470,7 +460,7 @@ def customer():
     run.add_text('There is a total number of {} startups coming from {} industries that were selected. The graph on the right creates a useful guideline about the competition in the market, what industries are oversaturated with startups and what still require the corporate support'.format(overal_number, len(industries)))
     paragraph = cells[1].paragraphs[0]
     run = paragraph.add_run()
-    run.add_picture('images/customer_focus.png', width = Inches(3.6), height = Inches(2.2))
+    run.add_picture('images/customer_focus.png', width = Inches(2.95), height = Inches(2))
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p = document.add_paragraph()
@@ -486,7 +476,7 @@ def table_maker(_):
     p = document.add_paragraph()
     p.alignment = 1
     r = p.add_run()
-    r.font.size = Pt(12)
+    r.font.size = Pt(18)
     r.bold = True
     r.add_text(industries[_])
     table = document.add_table(1, 3)
@@ -537,16 +527,17 @@ def launch():
     g.funding()
     g.product_focus()
     g.customer_focus()
-    #g.country_graph()
+    g.country_graph()
     g.word_cloud()
     first_page()
     ecosystem_map()
     industry()
-    #country()
+    country()
     stages()
     funding()
     product()
     customer()
+    document.add_paragraph('Startup Export', style='Title')
     for i in range(0, 3):
         table_maker(i)
     document.save('Report.docx')
