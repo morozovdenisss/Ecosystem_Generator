@@ -1,13 +1,120 @@
 import matplotlib.pyplot as plt
-from matplotlib.offsetbox import TextArea, DrawingArea, OffsetImage, AnnotationBbox
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox, TextArea, DrawingArea 
+from matplotlib.gridspec import GridSpec
 import matplotlib.image as mpimg
 import numpy as np
 import pandas as pd
+import matplotlib.image as mpimg
+import numpy as np
+import pandas as pd
+import os
+from PIL import Image
+
+class graph():
+    def idea(self):        
+        fig = plt.figure(constrained_layout=False, dpi=300)
+        gs = GridSpec(6, 6, figure=fig)
+        ax1 = fig.add_subplot(gs[0, 0:])
+        ax1.text(0.5, 0.5, r'01. Idea Stage', fontsize=15, va="center", ha="center")
+        ax2 = fig.add_subplot(gs[1, 0:2])
+        ax2.text(0.5, 0.5, r'Inspire', fontsize=15, va="center", ha="center")
+        ax3 = fig.add_subplot(gs[1, 2:4])
+        ax3.text(0.5, 0.5, r'Educate', fontsize=15, va="center", ha="center")
+        ax4 = fig.add_subplot(gs[1, 4:6])
+        ax4.text(0.5, 0.5, r'Validate', fontsize=15, va="center", ha="center")
+        ax5 = fig.add_subplot(gs[2:, 0])
+        directory = os.fsencode('/Users/denismorozov/Desktop/git/ecosystem_generator/images/as/')
+        self.image_placer(ax5, directory)
+        ax6 = fig.add_subplot(gs[2:, 1])
+        self.image_placer(ax6, directory)
+        ax7 = fig.add_subplot(gs[2:, 2])
+        self.image_placer(ax7, directory)
+        ax8 = fig.add_subplot(gs[2:, 3])
+        self.image_placer(ax8, directory)
+        ax9 = fig.add_subplot(gs[2:, 4])
+        self.image_placer(ax9, directory)
+        ax10 = fig.add_subplot(gs[2:, 5])
+        self.image_placer(ax10, directory)
+        
+        ax1 = fig.add_subplot(gs[0, 0:])
+        ax1.text(0.5, 0.5, r'01. Idea Stage', fontsize=15, va="center", ha="center")
+        ax2 = fig.add_subplot(gs[1, 0:2])
+        ax2.text(0.5, 0.5, r'Inspire', fontsize=15, va="center", ha="center")
+        ax3 = fig.add_subplot(gs[1, 2:4])
+        ax3.text(0.5, 0.5, r'Educate', fontsize=15, va="center", ha="center")
+        ax4 = fig.add_subplot(gs[1, 4:6])
+        ax4.text(0.5, 0.5, r'Validate', fontsize=15, va="center", ha="center")
+        ax5 = fig.add_subplot(gs[2:, 0])
+        directory = os.fsencode('/Users/denismorozov/Desktop/git/ecosystem_generator/images/as/')
+        self.image_placer(ax5, directory)
+        ax6 = fig.add_subplot(gs[2:, 1])
+        self.image_placer(ax6, directory)
+        ax7 = fig.add_subplot(gs[2:, 2])
+        self.image_placer(ax7, directory)
+        ax8 = fig.add_subplot(gs[2:, 3])
+        self.image_placer(ax8, directory)
+        ax9 = fig.add_subplot(gs[2:, 4])
+        self.image_placer(ax9, directory)
+        ax10 = fig.add_subplot(gs[2:, 5])
+        self.image_placer(ax10, directory)
+        
+        #fig.suptitle("Ecosystem Map")
+        for i, ax in enumerate(fig.axes):
+            ax.tick_params(labelbottom=False, labelleft=False, bottom = False, left = False)
+        plt.savefig('images/austrian_map.png',bbox_inches='tight')
+        plt.show()
+    
+    def image_placer(self, _, directory):
+        #_.set_title(industries[industry], fontsize = 8)
+        count = 1
+        basewidth = 25
+        filenames = []
+        for i in os.listdir(directory):
+            filename = os.fsdecode(i)
+            if filename.endswith( ('.jpeg', '.png', '.jpg', '.gif') ): 
+                filenames.append(filename)
+        for i in filenames:
+            img = Image.open('images/as/' + i)
+            wpercent = (basewidth/float(img.size[0]))
+            hsize = int((float(img.size[1])*float(wpercent)))
+            img = img.resize((basewidth,hsize), Image.ANTIALIAS)
+            img.save('images/as/' + i) 
+            arr_AS = mpimg.imread('images/as/' + i)
+            imagebox = OffsetImage(arr_AS)
+            if count == 1:
+                x, y  = 0.2, 0.2
+            if count > 1 and count < 4:
+                x += 0.3
+            if count  == 4:
+                x = 0.2
+                y = 0.5
+            if count > 4 and count < 7:
+                x += 0.3
+            if count  == 7:
+                x = 0.2
+                y = 0.8
+            if count > 8 and count < 10:
+                x += 0.3
+            if count == 10:
+                x, y  = 0.2, 0.2
+                count = 1
+                break
+            AS = AnnotationBbox(imagebox, (x, y))
+            count += 1
+            _.add_artist(AS)
+
+def launch():
+    g = graph()
+    g.idea()
+launch()
+
+
+
+
 '''
 file = pd.read_csv('EcoSystem.csv')
 file.head()
 #Iterate columns, get the relevant data from Sub-Type II
-'''
 fig, ax = plt.subplots()
 
 size = 0.3
@@ -65,4 +172,4 @@ xy = (0.5, 0.7)
 ax.plot(xy[0], xy[1], ".r")
 
 plt.show()
-
+'''
