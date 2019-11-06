@@ -148,6 +148,8 @@ class graph():
         for i in real_labels:
             if len(file[file['What is the current stage of your startup?'] == i]) > 0:
                 numbers_stages.append(len(file[file['What is the current stage of your startup?'] == i]))
+            if len(file[file['What is the current stage of your startup?'] == i]) == 0:
+                numbers_stages.append(0)
         width = 0.7
         fig, ax = plt.subplots(dpi=300)
         rect = ax.bar(x, numbers_stages, width, label='Startups')
@@ -280,9 +282,17 @@ class graph():
         plt.clf()
         plt.close()
         real_labels = []
-        numbers = []      
+        ordered_labels = []
+        numbers = []    
+        ordered_numbers = []
         group = file.groupby('Country of incorporation / registration').size()
         for i, v in group.items():
+            if ',' not in i:
+                if 'Bosnia' in i:
+                    i = 'B&H'
+                if i not in real_labels:
+                    real_labels.append(i)
+                    numbers.append(v)
             if ',' in  i:
                 new = i.split(',', 1)[0].replace(',', '')
                 if 'Bosnia' in new:
@@ -290,19 +300,18 @@ class graph():
                 if new not in real_labels:
                     real_labels.append(new)
                     numbers.append(v)
-            if ',' not in i:
-                if 'Bosnia' in i:
-                    i = 'B&H'
-                if i not in real_labels:
-                    real_labels.append(i)
-                    numbers.append(v)
-        x = np.arange(len(real_labels))
+        connected = {k:v for k,v in zip(real_labels,numbers)}
+        connected = sorted(connected.items(), key=lambda item: item[1])
+        for k, v in connected:
+            ordered_labels.append(k)
+            ordered_numbers.append(v)
+        x = np.arange(len(ordered_labels))
         width = 0.5
         fig, ax = plt.subplots(figsize=(7,3), dpi=300)
-        rect = ax.bar(x, numbers, width)
+        rect = ax.bar(x, ordered_numbers, width)
         #ax.set_ylabel('Number of Startups')
         ax.set_xticks(x)
-        ax.set_xticklabels(real_labels, rotation='vertical')
+        ax.set_xticklabels(ordered_labels, rotation='vertical')
         for i in rect:
             height = i.get_height()
             ax.annotate('{}'.format(height),
@@ -323,12 +332,12 @@ class graph():
     def word_cloud(self):
         plt.clf()
         plt.close()
-        wordcloud_mask = np.array(Image.open('images/wordcloud_mask.png'))
+        wordcloud_mask = np.array(Image.open('images/pionerd.png'))
         wordcloud_mask[wordcloud_mask == 0] = 255
         stopwords = set(STOPWORDS)
         stopwords.update(['client', 'customer', 'use', 'service', 'based', 'product', 'will', 'is', 'are', 'offer', 'company', 'use', 'project', 'provide', 'new'])
-        wordcloud = WordCloud(mask = wordcloud_mask, stopwords=stopwords, max_words=80, background_color="white", contour_width=0, contour_color='black').generate(' '.join(file['Description']))
-        plt.figure(figsize=[10,10])
+        wordcloud = WordCloud(mask = wordcloud_mask, stopwords=stopwords, max_words=80, background_color="white", contour_width=5, contour_color='black').generate(' '.join(file['Description']))
+        plt.figure(figsize=[8,8])
         plt.imshow(wordcloud, interpolation='bilinear')
         plt.axis("off")
         plt.show()
@@ -429,6 +438,7 @@ def funding():
     cells = table.rows[0].cells
     paragraph = cells[0].paragraphs[0]
     run = paragraph.add_run()
+    cells[0].add_paragraph
     run.add_text('• {} Pre-Seed Startups (1-200k)'.format(numbers_adapted[0]))
     cells[0].add_paragraph('• {} Seed Startups (200- 1 Mil)'.format(numbers_adapted[1]))
     cells[0].add_paragraph('• {} Series A Startups (1-3  Mil)'.format(numbers_adapted[2]))
@@ -451,9 +461,7 @@ def product():
     r.font.size = Pt(16)
     table = document.add_table(1, 2)
     cells = table.rows[0].cells
-    paragraph = cells[0].paragraphs[0]
-    run = paragraph.add_run()
-    run.add_text('• {} Software Startups'.format(numbers_product[0]))
+    cells[0].add_paragraph('• {} Software Startups'.format(numbers_product[0]))
     cells[0].add_paragraph('• {} Hardware Startups'.format(numbers_product[1]))
     cells[0].add_paragraph('• {} Other Startups'.format(numbers_product[2]))
     paragraph = cells[1].paragraphs[0]
@@ -470,9 +478,7 @@ def customer():
     r.font.size = Pt(16)
     table = document.add_table(1, 2)
     cells = table.rows[0].cells
-    paragraph = cells[0].paragraphs[0]
-    run = paragraph.add_run()
-    run.add_text('• {} B2C'.format(numbers_customer[0]))
+    cells[0].add_paragraph('• {} B2C'.format(numbers_customer[0]))
     cells[0].add_paragraph('• {} B2B'.format(numbers_customer[1]))
     cells[0].add_paragraph('• {} B2G'.format(numbers_customer[2]))
     paragraph = cells[1].paragraphs[0]
@@ -526,16 +532,26 @@ def launch():
     csv_from_excel()
     remove_cols()
     global file
-    file = pd.read_csv('csv_files/new_csv.csv', index_col=0)
+    file = pd.read_csv('csv_files/new_csv.csv', index_col=0)    
     file['Your industry'] = file['Your industry'].apply(coma_remove)
     print(file.head(20))
     global industries
     industries = []
+    industries_all = []
+    size = []
+    every = []
     for i in file['Your industry']:
+        if i not in every:
+            every.append(i)
+            industries_all.append(i)
+            size.append(len(file[file['Your industry'] == i]))
+    industries_all = {k:v for k,v in zip(industries_all,size)}
+    print(industries_all)
+    industries_all = sorted(industries_all.items(), key=lambda item: item[1], reverse = True)
+    for k, v in industries_all:
         if len(industries) == 4:
             break
-        if i not in industries:
-            industries.append(i)
+        industries.append(k)
     print(industries)
     g = graph()
     g.boxes()
