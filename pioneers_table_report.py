@@ -4,7 +4,8 @@ from matplotlib.gridspec import GridSpec
 import matplotlib.image as mpimg
 import numpy as np
 import pandas as pd
-import xlrd, csv, requests, shutil
+import geopandas as gpd
+import xlrd, csv, requests, shutil, json
 from docx import Document
 from docx.shared import Inches
 from PIL import Image
@@ -12,6 +13,12 @@ from docx.shared import Pt
 from docx.enum.text import WD_BREAK, WD_LINE_SPACING, WD_ALIGN_PARAGRAPH
 from docx.enum.style import WD_STYLE_TYPE
 from wordcloud import WordCloud, STOPWORDS
+from bokeh.io import show, output_file
+from bokeh.plotting import figure
+from bokeh.models import GeoJSONDataSource, LinearColorMapper, ColorBar
+from bokeh.palettes import brewer
+from bokeh.io import export_png
+
 # Step 1 - Extract variables from Json file and create dictionaries
 # Convert from Excel to CSV, remove unneeded columns, only leave 1 industry
 def csv_from_excel():
@@ -73,9 +80,9 @@ class graph():
             wpercent = (basewidth/float(img.size[0]))
             hsize = int((float(img.size[1])*float(wpercent)))
             img = img.resize((basewidth,hsize), Image.ANTIALIAS)
-            img.save('logos/'+png) 
-            arr_AS = mpimg.imread('logos/'+png)
-            imagebox = OffsetImage(arr_AS)
+            '''img.save('logos/'+png) 
+            arr_AS = mpimg.imread('logos/'+png)'''
+            imagebox = OffsetImage(img)
             if count == 1:
                 x, y  = 0.2, 0.2
             if count > 1 and count < 4:
@@ -283,7 +290,8 @@ class graph():
         plt.close()
         real_labels = []
         ordered_labels = []
-        numbers = []    
+        numbers = []  
+        global ordered_numbers
         ordered_numbers = []
         group = file.groupby('Country of incorporation / registration').size()
         for i, v in group.items():
@@ -305,6 +313,8 @@ class graph():
         for k, v in connected:
             ordered_labels.append(k)
             ordered_numbers.append(v)
+        global map_data
+        map_data = pd.DataFrame(data={"country": ordered_labels, "number": ordered_numbers})
         x = np.arange(len(ordered_labels))
         width = 0.5
         fig, ax = plt.subplots(figsize=(7,3), dpi=300)
@@ -328,6 +338,29 @@ class graph():
         fig.tight_layout()
         plt.savefig('images/country_graph.png', bbox_inches='tight', transparent=True)
         plt.show()
+        
+    def country_map(self):
+        shapefile = 'map/ne_110m_admin_0_countries.shp'
+        gdf = gpd.read_file(shapefile)[['ADMIN', 'ADM0_A3', 'geometry']]
+        gdf.columns = ['country', 'country_code', 'geometry'] 
+        gdf = gdf.drop(gdf.index[159]) #drop Antarctica
+        merged = gdf.merge(map_data, left_on = 'country', right_on = 'country', how = 'left')
+        merged.fillna('No data', inplace = True)
+        merged_json = json.loads(merged.to_json())
+        json_data = json.dumps(merged_json)
+        geosource = GeoJSONDataSource(geojson = json_data)
+        palette = brewer['Blues'][8]
+        palette = palette[::-1]
+        color_mapper = LinearColorMapper(palette = palette, low = 0, high = ordered_numbers[-1], nan_color = '#EAEAEA')
+        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=8,width = 500, height = 20,
+        border_line_color=None,location = (0,0), orientation = 'horizontal')
+        p = figure(title = 'Share of startups in countries', plot_height = 600 , plot_width = 950, toolbar_location = None)
+        p.xgrid.grid_line_color = None
+        p.ygrid.grid_line_color = None
+        p.patches('xs','ys', source = geosource,fill_color = {'field' :'number', 'transform' : color_mapper},
+                  line_color = 'black', line_width = 0.25, fill_alpha = 1)
+        p.add_layout(color_bar, 'below')
+        export_png(p, filename="map.png")
         
     def word_cloud(self):
         plt.clf()
@@ -355,13 +388,17 @@ def first_page():
     p.alignment = 1
     p = document.add_paragraph()
     r = p.add_run()
-    r.add_text('Ecosystem Report')
-    r.font.size = Pt(25)
+    r.add_text('Open Call Report')
+    r.font.size = Pt(45)
     r.bold = True
-    p.alignment = 1
+    print('Write the name of the open call you downloaded:')
+    x = input()
     p = document.add_paragraph()
     r = p.add_run()
-    r.add_picture('images/wordcloud.png', width=Inches(6), height=Inches(6))
+    r.add_text('For ' + x)
+    r.font.size = Pt(25)
+    '''r = p.add_run()
+    r.add_picture('images/wordcloud.png', width=Inches(6), height=Inches(6))'''
     r.add_break(WD_BREAK.PAGE)
 
 def ecosystem_map():   
@@ -400,12 +437,19 @@ def industry():
     r.add_break(WD_BREAK.PAGE)
 
 def country():
-    document.add_paragraph('Country, Stage and Funding', style='Title')
+    document.add_paragraph('Countries of Startups', style='Title')
     p = document.add_paragraph()
     r = p.add_run()
     r.add_picture('images/country_graph.png', width = Inches(5.5), height = Inches(2.4))
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    document.add_paragraph()
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_picture('map.png', width=Inches(5), height=Inches(3.2))
+    last_paragraph = document.paragraphs[-1] 
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r.add_break(WD_BREAK.PAGE)
     
 def stages():
     p = document.add_paragraph()
@@ -534,7 +578,6 @@ def launch():
     global file
     file = pd.read_csv('csv_files/new_csv.csv', index_col=0)    
     file['Your industry'] = file['Your industry'].apply(coma_remove)
-    print(file.head(20))
     global industries
     industries = []
     industries_all = []
@@ -546,13 +589,11 @@ def launch():
             industries_all.append(i)
             size.append(len(file[file['Your industry'] == i]))
     industries_all = {k:v for k,v in zip(industries_all,size)}
-    print(industries_all)
     industries_all = sorted(industries_all.items(), key=lambda item: item[1], reverse = True)
     for k, v in industries_all:
         if len(industries) == 4:
             break
         industries.append(k)
-    print(industries)
     g = graph()
     g.boxes()
     g.industry_graph()
@@ -561,7 +602,8 @@ def launch():
     g.product_focus()
     g.customer_focus()
     g.country_graph()
-    g.word_cloud()
+    g.country_map()
+    #g.word_cloud()
     first_page()
     ecosystem_map()
     industry()
