@@ -13,7 +13,6 @@ from docx.shared import Pt
 from docx.enum.text import WD_BREAK, WD_LINE_SPACING, WD_ALIGN_PARAGRAPH
 from docx.enum.style import WD_STYLE_TYPE
 from wordcloud import WordCloud, STOPWORDS
-from bokeh.io import show, output_file
 from bokeh.plotting import figure
 from bokeh.models import GeoJSONDataSource, LinearColorMapper, ColorBar
 from bokeh.palettes import brewer
@@ -217,21 +216,27 @@ class graph():
         fig.tight_layout()
         plt.savefig('images/funding_bar.png', bbox_inches='tight')
         plt.show()
-        
+    
+    #Doesn't Work, can't create combined graph without integers
     def combined_stages_funding(self):
-        fig = plt.figure(figsize=(16,10), dpi= 80)
-        sns.kdeplot(numbers_stages, shade=True, color="g", label="Stages", alpha=.7)
-        sns.kdeplot(numbers_adapted, shade=True, color="deeppink", label="Funding", alpha=.7)
+        fig = plt.figure(figsize=(30,10), dpi= 80) 
         plt.title('Stages vs Funding', fontsize=22)
+        
+        df = pd.Series(file['What is the current stage of your startup?'])
+        sns.distplot(df, color="dodgerblue", label="Stages")
+        
+        df = pd.Series(file['Total funding received in €'])
+        sns.distplot(df, color="deeppink", label="Funding")
+        
+        '''x = np.arange(len(labels))
+        plt.xticks(x, labels)
+        plt.xlabel('Funding', fontsize=18)'''
         for i, ax in enumerate(fig.axes):
             ax.tick_params(labelleft=False, bottom = False, left = False)
-        labels = ['25k', '75k', '125k', '200k', '300k', '500k', '800k', '1M', '1.5M', '2M', '2.5M', '3M', '5M', '10M', '10+M']
-        x = np.arange(len(labels))
-        plt.xticks(x, labels)
         plt.savefig('images/combined_stages_funding.png', bbox_inches='tight')
         plt.show()
         
-    '''def product_focus_barchart(self):
+    def product_focus_barchart(self):
         plt.clf()
         plt.close()
         global numbers_product
@@ -262,7 +267,7 @@ class graph():
         plt.tick_params(axis='x', which='major', labelsize = 15)
         fig.tight_layout()
         plt.savefig('images/product_focus.png', bbox_inches='tight')
-        plt.show()'''
+        plt.show()
         
     def product_focus_piechart(self):
         plt.clf()
@@ -279,7 +284,7 @@ class graph():
         explode = (0.3, 0.17, 0.08) 
         fig1, ax1 = plt.subplots(dpi=300)
         ax1.pie(numbers_product, explode=explode, labels=labels, autopct='%1.1f%%',
-                shadow=False, startangle=60)
+                shadow=False, startangle=40)
         ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
         plt.savefig('images/product_focus_piechart.png', bbox_inches='tight')
         plt.show()
@@ -316,11 +321,32 @@ class graph():
         fig.tight_layout()
         plt.savefig('images/customer_focus.png', bbox_inches='tight')
         plt.show()
+        
+    def customer_focus_piechart(self):
+        plt.clf()
+        plt.close()
+        global numbers_customer
+        labels = ['B2C', 'B2B', 'B2G']
+        real_labels = ['B2C', 'B2B', 'B2G']
+        numbers_product = []
+        for i in real_labels:
+            if len(file[file['Customer focus'] == i]) > 0:
+                numbers_product.append(len(file[file['Customer focus'] == i]))
+            if len(file[file['Customer focus'] == i]) == 0:
+                numbers_product.append(0)    
+        explode = (0.3, 0.17, 0.08) 
+        fig1, ax1 = plt.subplots(dpi=300)
+        ax1.pie(numbers_product, explode=explode, labels=labels, autopct='%1.1f%%',
+                shadow=False, startangle=40)
+        ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        plt.savefig('images/customer_focus_piechart.png', bbox_inches='tight')
+        plt.show()
 
     def country_graph(self):
         plt.clf()
         plt.close()
         real_labels = []
+        global ordered_labels
         ordered_labels = []
         numbers = []  
         global ordered_numbers
@@ -418,6 +444,8 @@ def first_page():
     r= p.add_run()
     r.add_picture('images/pioneers_logo.png', width=Inches(0.9), height=Inches(0.5))
     p.alignment = 1
+    for i in range(10):
+        document.add_paragraph()
     p = document.add_paragraph()
     r = p.add_run()
     r.add_text('Open Call Report')
@@ -451,12 +479,12 @@ def industry():
     r.add_text('Area of Operations')
     r.bold = True
     r.font.size = Pt(16)
-    p.alignment = 3
+    p.alignment = 1
     table = document.add_table(1, 2)
     cells = table.rows[0].cells
     paragraph = cells[0].paragraphs[0]
     run = paragraph.add_run()
-    run.add_text('There is a total number of {} startups coming from {} industries:'.format(overal_number, len(industries), numbers_industry[0], industries[0], numbers_industry[1], industries[1], numbers_industry[2], industries[2], numbers_industry[3], industries[3]))
+    run.add_text('There is a total number of {} startups from top {} industries:'.format(overal_number, len(industries), numbers_industry[0], industries[0], numbers_industry[1], industries[1], numbers_industry[2], industries[2], numbers_industry[3], industries[3]))
     for i in range(len(industries)):
         cells[0].add_paragraph('• {} from {}'.format(numbers_industry[i], industries[i]))
     paragraph = cells[1].paragraphs[0]
@@ -475,6 +503,19 @@ def country():
     r.add_picture('images/country_graph.png', width = Inches(5.5), height = Inches(2.4))
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_text('Top 3 countries: {}, {} & {}'.format(ordered_labels[-1],ordered_labels[-2],ordered_labels[-3]))
+    last_paragraph = document.paragraphs[-1] 
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    document.add_paragraph()
+    document.add_paragraph()
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_text('World Map of Startups')
+    r.bold = True
+    r.font.size = Pt(16)
+    p.alignment = 1
     document.add_paragraph()
     p = document.add_paragraph()
     r = p.add_run()
@@ -525,6 +566,31 @@ def funding():
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
+def stages_funding():
+    document.add_paragraph('Facts and Figures', style='Title')
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_text('Stages & Funding')
+    r.bold = True
+    r.font.size = Pt(16)
+    table = document.add_table(2, 2)
+    cells = table.rows[0].cells
+    run = cells[0].paragraphs[0].add_run('Stages')
+    run.bold = True
+    run.alingment = 1
+    run = cells[1].paragraphs[0].add_run('Funding')
+    run.bold = True
+    run.alingment = 1
+    cells = table.rows[1].cells
+    paragraph = cells[0].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_picture('images/stages_bar.png', width = Inches(2.95), height = Inches(2))
+    paragraph = cells[1].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_picture('images/funding_bar.png', width = Inches(2.95), height = Inches(2))
+    last_paragraph = document.paragraphs[-1] 
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
 def combined_s_f():
     p = document.add_paragraph()
     r = p.add_run()
@@ -535,10 +601,10 @@ def combined_s_f():
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p = document.add_paragraph()
     r = p.add_run()
-    r.add_picture('images/combined_stages_funding.png', width = Inches(2.95), height = Inches(2))
+    r.add_picture('images/combined_stages_funding.png', width = Inches(6), height = Inches(2))
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
+# This version has descriptions of products and customers
 def product():
     p = document.add_paragraph()
     r = p.add_run()
@@ -573,7 +639,36 @@ def customer():
     cells[0].add_paragraph('• {} B2G'.format(numbers_customer[2]))
     paragraph = cells[1].paragraphs[0]
     run = paragraph.add_run()
-    run.add_picture('images/customer_focus.png', width = Inches(2.95), height = Inches(2))
+    run.add_picture('images/customer_focus_piechart.png', width = Inches(2.95), height = Inches(2))
+    last_paragraph = document.paragraphs[-1] 
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_break(WD_BREAK.PAGE)
+    
+# This includes product and customers in one table
+def product_customer():
+    document.add_paragraph()
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_text('Products & Customers')
+    r.bold = True
+    r.font.size = Pt(16)
+    table = document.add_table(2, 2)
+    cells = table.rows[0].cells
+    run = cells[0].paragraphs[0].add_run('Product Focus')
+    run.bold = True
+    run.alingment = 1
+    run = cells[1].paragraphs[0].add_run('Customer Focus')
+    run.bold = True
+    run.alingment = 1
+    cells = table.rows[1].cells
+    paragraph = cells[0].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_picture('images/product_focus_piechart.png', width = Inches(2.95), height = Inches(2))
+    paragraph = cells[1].paragraphs[0]
+    run = paragraph.add_run()
+    run.add_picture('images/customer_focus_piechart.png', width = Inches(2.95), height = Inches(2))
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p = document.add_paragraph()
@@ -646,20 +741,22 @@ def launch():
     g.stages_graph()
     g.funding()
     g.product_focus_piechart()
-    g.customer_focus()
+    g.customer_focus_piechart()
     g.country_graph()
     g.country_map()
-    g.combined_stages_funding()
+    #g.combined_stages_funding()
     #g.word_cloud()
     first_page()
     ecosystem_map()
     industry()
     country()
-    stages()
-    funding()
-    combined_s_f()
-    product()
-    customer()
+    #stages()
+    #funding()
+    stages_funding()
+    #combined_s_f()
+    #product()
+    #customer()
+    product_customer()
     document.add_paragraph('Startup Export', style='Title')
     for i in range(0, 3):
         table_maker(i)
