@@ -18,6 +18,7 @@ from bokeh.plotting import figure
 from bokeh.models import GeoJSONDataSource, LinearColorMapper, ColorBar
 from bokeh.palettes import brewer
 from bokeh.io import export_png
+import seaborn as sns
 
 # Step 1 - Extract variables from Json file and create dictionaries
 # Convert from Excel to CSV, remove unneeded columns, only leave 1 industry
@@ -69,7 +70,7 @@ class graph():
         _.set_title(industries[industry], fontsize = 8)
         count = 1
         new = file.loc[file['Your industry'] == industries[industry]]
-        basewidth = 25
+        size = 30, 30
         for i in new['Logo']:
             png = i.split('/', 1)[-1].replace('/', '')
             r = requests.get(i, stream  = True)
@@ -77,9 +78,7 @@ class graph():
                 shutil.copyfileobj(r.raw, out_file) 
             del r
             img = Image.open('logos/'+png)
-            wpercent = (basewidth/float(img.size[0]))
-            hsize = int((float(img.size[1])*float(wpercent)))
-            img = img.resize((basewidth,hsize), Image.ANTIALIAS)
+            img.thumbnail(size, Image.ANTIALIAS)
             '''img.save('logos/'+png) 
             arr_AS = mpimg.imread('logos/'+png)'''
             imagebox = OffsetImage(img)
@@ -219,7 +218,20 @@ class graph():
         plt.savefig('images/funding_bar.png', bbox_inches='tight')
         plt.show()
         
-    def product_focus(self):
+    def combined_stages_funding(self):
+        fig = plt.figure(figsize=(16,10), dpi= 80)
+        sns.kdeplot(numbers_stages, shade=True, color="g", label="Stages", alpha=.7)
+        sns.kdeplot(numbers_adapted, shade=True, color="deeppink", label="Funding", alpha=.7)
+        plt.title('Stages vs Funding', fontsize=22)
+        for i, ax in enumerate(fig.axes):
+            ax.tick_params(labelleft=False, bottom = False, left = False)
+        labels = ['25k', '75k', '125k', '200k', '300k', '500k', '800k', '1M', '1.5M', '2M', '2.5M', '3M', '5M', '10M', '10+M']
+        x = np.arange(len(labels))
+        plt.xticks(x, labels)
+        plt.savefig('images/combined_stages_funding.png', bbox_inches='tight')
+        plt.show()
+        
+    '''def product_focus_barchart(self):
         plt.clf()
         plt.close()
         global numbers_product
@@ -250,6 +262,26 @@ class graph():
         plt.tick_params(axis='x', which='major', labelsize = 15)
         fig.tight_layout()
         plt.savefig('images/product_focus.png', bbox_inches='tight')
+        plt.show()'''
+        
+    def product_focus_piechart(self):
+        plt.clf()
+        plt.close()
+        global numbers_product
+        labels = ['Software', 'Hardware', 'Others']
+        real_labels = ['Software application', 'Physical product', 'Something else']
+        numbers_product = []
+        for i in real_labels:
+            if len(file[file['Product focus'] == i]) > 0:
+                numbers_product.append(len(file[file['Product focus'] == i]))
+            if len(file[file['Product focus'] == i]) == 0:
+                numbers_product.append(0)    
+        explode = (0.3, 0.17, 0.08) 
+        fig1, ax1 = plt.subplots(dpi=300)
+        ax1.pie(numbers_product, explode=explode, labels=labels, autopct='%1.1f%%',
+                shadow=False, startangle=60)
+        ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        plt.savefig('images/product_focus_piechart.png', bbox_inches='tight')
         plt.show()
     
     def customer_focus(self):
@@ -404,7 +436,7 @@ def first_page():
 def ecosystem_map():   
     document.add_paragraph('Ecosystem Report', style='Title')
     p = document.add_paragraph()
-    p.add_run('Successful collaboration begins with choosing the right startups for your innovation initiatives! This report provides an overview of the 4 following industries:')
+    p.add_run('Successful collaboration begins with choosing the right startups for your innovation initiatives! The top 4 industries of the open call are:')
     for i in industries:
         document.add_paragraph(i, style='List Bullet')
     p = document.add_paragraph()
@@ -492,7 +524,21 @@ def funding():
     run.add_picture('images/funding_bar.png', width = Inches(2.95), height = Inches(2))
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
+
+def combined_s_f():
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_text('Combined')
+    r.bold = True
+    r.font.size = Pt(16)
+    last_paragraph = document.paragraphs[-1] 
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_picture('images/combined_stages_funding.png', width = Inches(2.95), height = Inches(2))
+    last_paragraph = document.paragraphs[-1] 
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
 def product():
     p = document.add_paragraph()
     r = p.add_run()
@@ -510,7 +556,7 @@ def product():
     cells[0].add_paragraph('• {} Other Startups'.format(numbers_product[2]))
     paragraph = cells[1].paragraphs[0]
     run = paragraph.add_run()
-    run.add_picture('images/product_focus.png', width = Inches(2.95), height = Inches(2))
+    run.add_picture('images/product_focus_piechart.png', width = Inches(2.95), height = Inches(2))
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
@@ -599,10 +645,11 @@ def launch():
     g.industry_graph()
     g.stages_graph()
     g.funding()
-    g.product_focus()
+    g.product_focus_piechart()
     g.customer_focus()
     g.country_graph()
     g.country_map()
+    g.combined_stages_funding()
     #g.word_cloud()
     first_page()
     ecosystem_map()
@@ -610,6 +657,7 @@ def launch():
     country()
     stages()
     funding()
+    combined_s_f()
     product()
     customer()
     document.add_paragraph('Startup Export', style='Title')
