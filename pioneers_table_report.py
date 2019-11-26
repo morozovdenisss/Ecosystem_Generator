@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import matplotlib.pyplot as plt
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.gridspec import GridSpec
@@ -19,8 +20,8 @@ from bokeh.palettes import brewer
 from bokeh.io import export_png
 import seaborn as sns
 
-# Step 1 - Extract variables from Json file and create dictionaries
-# Convert from Excel to CSV, remove unneeded columns, only leave 1 industry
+# Step 1
+# Convert from Excel to CSV, remove unneeded columns & adapt the dataset.
 def csv_from_excel():
     wb = xlrd.open_workbook('pioneers.xls')
     sh = wb.sheet_by_index(0)
@@ -42,7 +43,8 @@ def coma_remove(item):
         item = item.split(',', 1)[0].replace(',', '')
     return str(item)
 
-#Step 2 - Plot the graphs, iterate dictionaries, get logos, input into table
+# Step 2 
+# All of the graphs creation & data scraping is happening here. 
 class graph():
     def boxes(self):        
         fig = plt.figure(constrained_layout=True, dpi=300)
@@ -63,7 +65,6 @@ class graph():
         for i, ax in enumerate(fig.axes):
             ax.tick_params(labelbottom=False, labelleft=False, bottom = False, left = False)
         plt.savefig('images/ecosystem_map.png',bbox_inches='tight')
-        plt.show()
     
     def image_placer(self, _, industry):
         _.set_title(industries[industry], fontsize = 8)
@@ -83,19 +84,19 @@ class graph():
             imagebox = OffsetImage(img)
             if count == 1:
                 x, y  = 0.2, 0.2
-            if count > 1 and count < 4:
+            elif count > 1 and count < 4:
                 x += 0.3
-            if count  == 4:
+            elif count  == 4:
                 x = 0.2
                 y = 0.5
-            if count > 4 and count < 7:
+            elif count > 4 and count < 7:
                 x += 0.3
-            if count  == 7:
+            elif count  == 7:
                 x = 0.2
                 y = 0.8
-            if count > 8 and count < 10:
+            elif count > 8 and count < 10:
                 x += 0.3
-            if count == 10:
+            elif count == 10:
                 x, y  = 0.2, 0.2
                 count = 1
                 break
@@ -140,7 +141,6 @@ class graph():
         plt.tick_params(axis='x', which='major', labelsize = 10)
         fig.tight_layout()
         plt.savefig('images/industry_graph.png', bbox_inches='tight')
-        plt.show()
     
     def stages_graph(self):
         plt.clf()
@@ -157,7 +157,7 @@ class graph():
         for i in real_labels:
             if len(file[file['What is the current stage of your startup?'] == i]) > 0:
                 numbers_stages.append(len(file[file['What is the current stage of your startup?'] == i]))
-            if len(file[file['What is the current stage of your startup?'] == i]) == 0:
+            elif len(file[file['What is the current stage of your startup?'] == i]) == 0:
                 numbers_stages.append(0)
         sorted_stages = {k:v for k,v in zip(real_labels,numbers_stages)}
         sorted_stages = sorted(sorted_stages.items(), key=lambda item: item[1])
@@ -167,8 +167,6 @@ class graph():
         width = 0.7
         fig, ax = plt.subplots(dpi=300)
         rect = ax.bar(x, numbers_stages, width, label='Startups', color = '#0327f7')
-        #ax.set_ylabel('Number of Startups')
-        #ax.set_title('Stages of Startups')
         ax.set_xticks(x)
         ax.set_xticklabels(labels)
         for i in rect:
@@ -181,8 +179,7 @@ class graph():
         ax.legend()
         ax.tick_params(left=False, labelleft=False, bottom=False, labelsize = 12)
         fig.tight_layout()
-        plt.savefig('images/stages_bar.png', bbox_inches='tight')
-        plt.show()
+        plt.savefig('images/stages_bar.png', bbox_inches='tight')     
         
     def funding(self):
         plt.clf()
@@ -200,7 +197,7 @@ class graph():
         for i in real_labels:
             if len(file[file['Total funding received in €'] == i]) > 0:
                 numbers_funding.append(len(file[file['Total funding received in €'] == i]))
-            if len(file[file['Total funding received in €'] == i]) == 0:
+            elif len(file[file['Total funding received in €'] == i]) == 0:
                 numbers_funding.append(0)
         sorted_funding = {k:v for k,v in zip(real_labels,numbers_funding)}
         sorted_funding = sorted(sorted_funding.items(), key=lambda item: item[1])
@@ -233,7 +230,6 @@ class graph():
         plt.tick_params(axis='x', which='major', labelsize = 9)
         fig.tight_layout()
         plt.savefig('images/funding_bar.png', bbox_inches='tight')
-        plt.show()
     
     #Doesn't Work, can't create combined graph without integers
     def combined_stages_funding(self):
@@ -248,7 +244,6 @@ class graph():
         for i, ax in enumerate(fig.axes):
             ax.tick_params(labelleft=False, bottom = False, left = False)
         plt.savefig('images/combined_stages_funding.png', bbox_inches='tight')
-        plt.show()
         
     def product_focus_barchart(self):
         plt.clf()
@@ -261,7 +256,7 @@ class graph():
         for i in real_labels:
             if len(file[file['Product focus'] == i]) > 0:
                 numbers_product.append(len(file[file['Product focus'] == i]))
-            if len(file[file['Product focus'] == i]) == 0:
+            elif len(file[file['Product focus'] == i]) == 0:
                 numbers_product.append(0)
         width = 0.5
         fig, ax = plt.subplots(dpi=300)
@@ -281,7 +276,6 @@ class graph():
         plt.tick_params(axis='x', which='major', labelsize = 15)
         fig.tight_layout()
         plt.savefig('images/product_focus.png', bbox_inches='tight')
-        plt.show()
         
     def product_focus_piechart(self):
         plt.clf()
@@ -298,7 +292,7 @@ class graph():
         for i in real_labels:
             if len(file[file['Product focus'] == i]) > 0:
                 numbers_product.append(len(file[file['Product focus'] == i]))
-            if len(file[file['Product focus'] == i]) == 0:
+            elif len(file[file['Product focus'] == i]) == 0:
                 explode.pop()   
         connected = {k:v for k,v in zip(real_labels,numbers_product)}
         connected = sorted(connected.items(), key=lambda item: item[1])
@@ -310,7 +304,6 @@ class graph():
                 shadow=False, startangle=40)
         ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
         plt.savefig('images/product_focus_piechart.png', bbox_inches='tight')
-        plt.show()
     
     def customer_focus(self):
         plt.clf()
@@ -323,7 +316,7 @@ class graph():
         for i in real_labels:
             if len(file[file['Customer focus'] == i]) > 0:
                 numbers_customer.append(len(file[file['Customer focus'] == i]))
-            if len(file[file['Customer focus'] == i]) == 0:
+            elif len(file[file['Customer focus'] == i]) == 0:
                 numbers_customer.append(0)
         width = 0.5
         fig, ax = plt.subplots(dpi=300)
@@ -343,7 +336,6 @@ class graph():
         plt.tick_params(axis='x', which='major', labelsize = 15)
         fig.tight_layout()
         plt.savefig('images/customer_focus.png', bbox_inches='tight')
-        plt.show()
         
     def customer_focus_piechart(self):
         plt.clf()
@@ -361,7 +353,7 @@ class graph():
             if len(file[file['Customer focus'] == i]) > 0:
                 numbers_product.append(len(file[file['Customer focus'] == i]))
                 real_labels.append(i)
-            if len(file[file['Customer focus'] == i]) == 0:
+            elif len(file[file['Customer focus'] == i]) == 0:
                 explode.pop()
         connected = {k:v for k,v in zip(real_labels,numbers_product)}
         connected = sorted(connected.items(), key=lambda item: item[1])
@@ -373,7 +365,6 @@ class graph():
                 shadow=False, startangle=40)
         ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
         plt.savefig('images/customer_focus_piechart.png', bbox_inches='tight')
-        plt.show()
 
     def country_graph(self):
         plt.clf()
@@ -387,15 +378,11 @@ class graph():
         group = file.groupby('Country of incorporation / registration').size()
         for i, v in group.items():
             if ',' not in i:
-                if 'Bosnia' in i:
-                    i = 'B&H'
                 if i not in real_labels:
                     real_labels.append(i)
                     numbers.append(v)
             if ',' in  i:
                 new = i.split(',', 1)[0].replace(',', '')
-                if 'Bosnia' in new:
-                    new = 'B&H'
                 if new not in real_labels:
                     real_labels.append(new)
                     numbers.append(v)
@@ -410,7 +397,6 @@ class graph():
         width = 0.5
         fig, ax = plt.subplots(figsize=(7,3), dpi=300)
         rect = ax.bar(x, ordered_numbers, width, color = '#0327f7')
-        #ax.set_ylabel('Number of Startups')
         ax.set_xticks(x)
         ax.set_xticklabels(ordered_labels, rotation='vertical')
         for i in rect:
@@ -420,7 +406,6 @@ class graph():
                         xytext=(0, 0),
                         textcoords="offset points",
                         ha='center', va='bottom')
-        ax.legend()
         ax.tick_params(left=False, labelleft=False, bottom=False)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
@@ -428,7 +413,6 @@ class graph():
         plt.tick_params(axis='x', which='major', labelsize = 9)
         fig.tight_layout()
         plt.savefig('images/country_graph.png', bbox_inches='tight', transparent=True)
-        plt.show()
         
     def country_map(self):
         shapefile = 'map/ne_110m_admin_0_countries.shp'
@@ -465,10 +449,10 @@ class graph():
         plt.figure(figsize=[8,8])
         plt.imshow(wordcloud, interpolation='bilinear')
         plt.axis("off")
-        plt.show()
         wordcloud.to_file("images/wordcloud.png")
         
-# Step 3 - Create Text and input all files and text into Word document 
+# Step 3 
+# Using docx python library to create Word file and input all information.
 def first_page():
     global document
     document = Document()
@@ -494,7 +478,7 @@ def first_page():
     r.add_break(WD_BREAK.PAGE)
 
 def ecosystem_map():   
-    document.add_paragraph('Ecosystem Report', style='Title')
+    document.add_paragraph('Industries and Operations', style='Title')
     p = document.add_paragraph()
     p.add_run('Successful collaboration begins with choosing the right startups for your innovation initiatives! The top 4 industries of ' + open_call + ' open call are:')
     for i in industries:
@@ -503,15 +487,14 @@ def ecosystem_map():
     r = p.add_run()
     r.add_picture('images/ecosystem_map.png', width=Inches(5), height=Inches(3.2))
     p.alignment = 1
-    document.add_paragraph() 
 
 def industry():
-    p = document.add_paragraph()
-    r = p.add_run()
-    r.add_text('Area of Operations')
+    '''r.add_text('Areas of Operations')
     r.bold = True
     r.font.size = Pt(16)
-    p.alignment = 1
+    p.alignment = 1'''
+    p = document.add_paragraph()
+    r = p.add_run()
     table = document.add_table(1, 2)
     cells = table.rows[0].cells
     paragraph = cells[0].paragraphs[0]
