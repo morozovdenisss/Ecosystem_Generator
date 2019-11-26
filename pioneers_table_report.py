@@ -10,7 +10,7 @@ from docx import Document
 from docx.shared import Inches
 from PIL import Image
 from docx.shared import Pt
-from docx.enum.text import WD_BREAK, WD_LINE_SPACING, WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_BREAK, WD_ALIGN_PARAGRAPH
 from docx.enum.style import WD_STYLE_TYPE
 from wordcloud import WordCloud, STOPWORDS
 from bokeh.plotting import figure
@@ -99,7 +99,7 @@ class graph():
                 x, y  = 0.2, 0.2
                 count = 1
                 break
-            AS = AnnotationBbox(imagebox, (x, y))
+            AS = AnnotationBbox(imagebox, (x, y), frameon=False, pad=0)
             count += 1
             _.add_artist(AS)
             
@@ -122,9 +122,9 @@ class graph():
             if len(file[file['Your industry'] == i]) > 0:
                 numbers_industry.append(len(file[file['Your industry'] == i]))
                 overal_number += len(file[file['Your industry'] == i])
-        width = 0.7
+        width = 0.5
         fig, ax = plt.subplots(dpi=300)
-        rect = ax.bar(x, numbers_industry, width, label='Industries')
+        rect = ax.bar(x, numbers_industry, width, label='Industries', color = '#0327f7')
         #ax.set_ylabel('Number of Startups')
         ax.set_xticks(x)
         ax.set_xticklabels(labels)
@@ -149,15 +149,24 @@ class graph():
         labels = ['Concept\n Stage', 'Seed\n Stage', 'Early\n Stage', 'Growth\n Stage', 'Established\n Business']
         real_labels = ['Concept Stage (got an idea)', 'Seed Stage (working on a product)', 'Early Stage (prototype ready and close to market)', 'Growth Stage (we\'re out there and making money)', 'Established Business (achieved break-even point operationally)']
         numbers_stages = []
+        global stages_labels
+        stages_labels = []
+        global stages_numbers
+        stages_numbers = []
         x = np.arange(len(labels))
         for i in real_labels:
             if len(file[file['What is the current stage of your startup?'] == i]) > 0:
                 numbers_stages.append(len(file[file['What is the current stage of your startup?'] == i]))
             if len(file[file['What is the current stage of your startup?'] == i]) == 0:
                 numbers_stages.append(0)
+        sorted_stages = {k:v for k,v in zip(real_labels,numbers_stages)}
+        sorted_stages = sorted(sorted_stages.items(), key=lambda item: item[1])
+        for k, v in sorted_stages:
+            stages_labels.append(k)      
+            stages_numbers.append(v)
         width = 0.7
         fig, ax = plt.subplots(dpi=300)
-        rect = ax.bar(x, numbers_stages, width, label='Startups')
+        rect = ax.bar(x, numbers_stages, width, label='Startups', color = '#0327f7')
         #ax.set_ylabel('Number of Startups')
         #ax.set_title('Stages of Startups')
         ax.set_xticks(x)
@@ -179,16 +188,25 @@ class graph():
         plt.clf()
         plt.close()
         global numbers_adapted
+        numbers_adapted = []
         labels = ['25k', '75k', '125k', '200k', '300k', '500k', '800k', '1M', '1.5M', '2M', '2.5M', '3M', '5M', '10M', '10+M']
         real_labels = ['1-25k', '26 - 75k', '76 - 125k', '126 - 200k', '201 - 300k', '301 - 500k', '501 - 800k', '801k - 1 M', '1 - 1.5 M', '1.5 - 2 M', '2 - 2.5 M', '2.5 - 3 M', '3 - 5 M', '5 - 10 M', '10+ M']
         x = np.arange(len(labels))
         numbers_funding = []
-        numbers_adapted = []
+        global funding_labels
+        funding_labels = []
+        global funding_numbers
+        funding_numbers = []
         for i in real_labels:
             if len(file[file['Total funding received in €'] == i]) > 0:
                 numbers_funding.append(len(file[file['Total funding received in €'] == i]))
             if len(file[file['Total funding received in €'] == i]) == 0:
                 numbers_funding.append(0)
+        sorted_funding = {k:v for k,v in zip(real_labels,numbers_funding)}
+        sorted_funding = sorted(sorted_funding.items(), key=lambda item: item[1])
+        for k, v in sorted_funding:
+            funding_labels.append(k)      
+            funding_numbers.append(v)      
         n = numbers_funding[0] + numbers_funding[1] + numbers_funding[2] + numbers_funding[3]
         numbers_adapted.append(n)
         n = numbers_funding[4] + numbers_funding[5] + numbers_funding[6] + numbers_funding[7]
@@ -199,7 +217,7 @@ class graph():
         numbers_adapted.append(n)
         width = 0.5
         fig, ax = plt.subplots(dpi=300)
-        rect = ax.bar(x, numbers_funding, width, label='Funding')
+        rect = ax.bar(x, numbers_funding, width, label='Funding', color = '#0327f7')
         #ax.set_ylabel('Number of Startups')
         ax.set_xticks(x)
         ax.set_xticklabels(labels)
@@ -221,13 +239,9 @@ class graph():
     def combined_stages_funding(self):
         fig = plt.figure(figsize=(30,10), dpi= 80) 
         plt.title('Stages vs Funding', fontsize=22)
-        
-        df = pd.Series(file['What is the current stage of your startup?'])
-        sns.distplot(df, color="dodgerblue", label="Stages")
-        
-        df = pd.Series(file['Total funding received in €'])
-        sns.distplot(df, color="deeppink", label="Funding")
-        
+        sns.kdeplot(file.loc[file['What is the current stage of your startup?'] == stages_labels[-1], "Total funding received in €"], shade=True, color="deeppink", label=stages_labels[-1], alpha=.7)
+        sns.kdeplot(file.loc[file['What is the current stage of your startup?'] == stages_labels[-2], "Total funding received in €"], shade=True, color="dodgerblue", label=stages_labels[-2], alpha=.7)
+        sns.kdeplot(file.loc[file['What is the current stage of your startup?'] == stages_labels[-3], "Total funding received in €"], shade=True, color="g", label=stages_labels[-3], alpha=.7)
         '''x = np.arange(len(labels))
         plt.xticks(x, labels)
         plt.xlabel('Funding', fontsize=18)'''
@@ -276,12 +290,21 @@ class graph():
         labels = ['Software', 'Hardware', 'Others']
         real_labels = ['Software application', 'Physical product', 'Something else']
         numbers_product = []
+        global product_labels
+        product_labels = []
+        global product_numbers
+        product_numbers = []
+        explode = (0.3, 0.17, 0.08) 
         for i in real_labels:
             if len(file[file['Product focus'] == i]) > 0:
                 numbers_product.append(len(file[file['Product focus'] == i]))
             if len(file[file['Product focus'] == i]) == 0:
-                numbers_product.append(0)    
-        explode = (0.3, 0.17, 0.08) 
+                explode.pop()   
+        connected = {k:v for k,v in zip(real_labels,numbers_product)}
+        connected = sorted(connected.items(), key=lambda item: item[1])
+        for k, v in connected:
+            product_labels.append(k)
+            product_numbers.append(v)
         fig1, ax1 = plt.subplots(dpi=300)
         ax1.pie(numbers_product, explode=explode, labels=labels, autopct='%1.1f%%',
                 shadow=False, startangle=40)
@@ -327,16 +350,26 @@ class graph():
         plt.close()
         global numbers_customer
         labels = ['B2C', 'B2B', 'B2G']
-        real_labels = ['B2C', 'B2B', 'B2G']
+        real_labels = []
         numbers_product = []
-        for i in real_labels:
+        global customer_labels
+        customer_labels = []
+        global customer_numbers
+        customer_numbers= []
+        explode = [0.3, 0.17, 0.08]
+        for i in labels:
             if len(file[file['Customer focus'] == i]) > 0:
                 numbers_product.append(len(file[file['Customer focus'] == i]))
+                real_labels.append(i)
             if len(file[file['Customer focus'] == i]) == 0:
-                numbers_product.append(0)    
-        explode = (0.3, 0.17, 0.08) 
+                explode.pop()
+        connected = {k:v for k,v in zip(real_labels,numbers_product)}
+        connected = sorted(connected.items(), key=lambda item: item[1])
+        for k, v in connected:
+            customer_labels.append(k)
+            customer_numbers.append(v)
         fig1, ax1 = plt.subplots(dpi=300)
-        ax1.pie(numbers_product, explode=explode, labels=labels, autopct='%1.1f%%',
+        ax1.pie(numbers_product, explode=explode, labels=real_labels, autopct='%1.1f%%',
                 shadow=False, startangle=40)
         ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
         plt.savefig('images/customer_focus_piechart.png', bbox_inches='tight')
@@ -376,7 +409,7 @@ class graph():
         x = np.arange(len(ordered_labels))
         width = 0.5
         fig, ax = plt.subplots(figsize=(7,3), dpi=300)
-        rect = ax.bar(x, ordered_numbers, width)
+        rect = ax.bar(x, ordered_numbers, width, color = '#0327f7')
         #ax.set_ylabel('Number of Startups')
         ax.set_xticks(x)
         ax.set_xticklabels(ordered_labels, rotation='vertical')
@@ -415,6 +448,7 @@ class graph():
         p = figure(title = 'Share of startups in countries', plot_height = 600 , plot_width = 950, toolbar_location = None)
         p.xgrid.grid_line_color = None
         p.ygrid.grid_line_color = None
+        p.axis.visible = False
         p.patches('xs','ys', source = geosource,fill_color = {'field' :'number', 'transform' : color_mapper},
                   line_color = 'black', line_width = 0.25, fill_alpha = 1)
         p.add_layout(color_bar, 'below')
@@ -451,11 +485,9 @@ def first_page():
     r.add_text('Open Call Report')
     r.font.size = Pt(45)
     r.bold = True
-    print('Write the name of the open call you downloaded:')
-    x = input()
     p = document.add_paragraph()
     r = p.add_run()
-    r.add_text('For ' + x)
+    r.add_text('For ' + open_call)
     r.font.size = Pt(25)
     '''r = p.add_run()
     r.add_picture('images/wordcloud.png', width=Inches(6), height=Inches(6))'''
@@ -464,7 +496,7 @@ def first_page():
 def ecosystem_map():   
     document.add_paragraph('Ecosystem Report', style='Title')
     p = document.add_paragraph()
-    p.add_run('Successful collaboration begins with choosing the right startups for your innovation initiatives! The top 4 industries of the open call are:')
+    p.add_run('Successful collaboration begins with choosing the right startups for your innovation initiatives! The top 4 industries of ' + open_call + ' open call are:')
     for i in industries:
         document.add_paragraph(i, style='List Bullet')
     p = document.add_paragraph()
@@ -497,7 +529,7 @@ def industry():
     r.add_break(WD_BREAK.PAGE)
 
 def country():
-    document.add_paragraph('Countries of Startups', style='Title')
+    document.add_paragraph('Countries of Operations', style='Title')
     p = document.add_paragraph()
     r = p.add_run()
     r.add_picture('images/country_graph.png', width = Inches(5.5), height = Inches(2.4))
@@ -509,17 +541,16 @@ def country():
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     document.add_paragraph()
-    document.add_paragraph()
-    p = document.add_paragraph()
+    '''p = document.add_paragraph()
     r = p.add_run()
     r.add_text('World Map of Startups')
     r.bold = True
     r.font.size = Pt(16)
     p.alignment = 1
-    document.add_paragraph()
+    document.add_paragraph()'''
     p = document.add_paragraph()
     r = p.add_run()
-    r.add_picture('map.png', width=Inches(5), height=Inches(3.2))
+    r.add_picture('map.png', width=Inches(6.2), height=Inches(3.7))
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     r.add_break(WD_BREAK.PAGE)
@@ -590,7 +621,13 @@ def stages_funding():
     run.add_picture('images/funding_bar.png', width = Inches(2.95), height = Inches(2))
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
+    document.add_paragraph()
+    p = document.add_paragraph()
+    r = p.add_run()
+    r.add_text('There are {} {} startups in the open call. The most common funding is between {} and {} startups received it.'.format(stages_numbers[-1], stages_labels[-1], funding_labels[-1], funding_numbers[-1]))
+    last_paragraph = document.paragraphs[-1] 
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
 def combined_s_f():
     p = document.add_paragraph()
     r = p.add_run()
@@ -671,6 +708,15 @@ def product_customer():
     run.add_picture('images/customer_focus_piechart.png', width = Inches(2.95), height = Inches(2))
     last_paragraph = document.paragraphs[-1] 
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    document.add_paragraph()
+    p = document.add_paragraph()
+    r = p.add_run()
+    product_sum = 0
+    for i in numbers_product:
+        product_sum += i
+    r.add_text('{} from {} applicants have {} product. {} startups focus on {} customers.'.format(product_numbers[-1],product_sum,product_labels[-1],customer_numbers[-1],customer_labels[-1]))
+    last_paragraph = document.paragraphs[-1] 
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p = document.add_paragraph()
     r = p.add_run()
     r.add_break(WD_BREAK.PAGE)
@@ -714,6 +760,10 @@ def table_maker(_):
     document.add_paragraph()
 
 def launch():
+    global open_call
+    print('Write the name of the open call you downloaded:')
+    open_call = input()
+    plt.style.use('seaborn-darkgrid')
     csv_from_excel()
     remove_cols()
     global file
@@ -763,4 +813,5 @@ def launch():
     document.save('Report.docx')
 
 # Need to figure out how to change .docx into .pdf
-launch()
+if __name__ == '__main__':    
+    launch()
