@@ -1,18 +1,18 @@
-# Ecosystem Generator
-This tool creates automatic visual reports for the startup ecosystems. Each script is created for different usecase and datasets.
+# Ecosystem Report Generator
+This tool creates automatic visual reports for the startup ecosystems. Each script is created for different usecase and datasets. The main goal of the project is toreducethe time innovation consultants spend on presentations.
 
 ## Pioneers Table Report
-The purpose of this script is to take the spreadsheet downloaded from PioBay platform, extract the relevant data and turn it into visual report. It consists of the ecosystem map image with the logos of the companies displayed on it and afterwards a table that gives the name, domain and description of every company in the spreadsheet based on the specific industry. 
+The purpose of this script is to take the spreadsheet downloaded from PioBay platform, extract the relevant data and turn it into visual report. It consists of the ecosystem map, description of industries, heatmap, countrybarchart, product&customer focus piecharts and much more. 
 
-P.S. Due to the data handling rules the logos and names on the report are blurred.
+You can view the report with dummy data at the following link: [Report 1](https://github.com/morozovdenisss/Ecosystem_Generator/blob/master/reports/Full%20Project%20Report%20.pdf)
 
-![Report 1](https://github.com/morozovdenisss/Ecosystem_Generator/blob/master/reports/pioneers_report_blurred.png)
+Following types of data are included:
+![Types of Graphs](reports/Graphs%20in%20Report.png)
+
+The project is close to completion.
 
 ## Austrian Startups Piechart Report
-This project has similar purpose to the previous, but required a different visualization and many more industries to be included in the circle shape. 
-
-This tool is currently under development.
+This project has similar purpose to the previous, but required a different visualization and many more industries to be included in the circle shape. Due to the issues with image resizing (image looses too much quality when resized into logo), the project was adapted, and done by hand in Sketch.
 
 ## Contributing
 Comments and recommendations are very welcome.
-
