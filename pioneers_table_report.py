@@ -398,7 +398,7 @@ class graph():
         fig, ax = plt.subplots(figsize=(7,3), dpi=300)
         rect = ax.bar(x, ordered_numbers, width, color = '#0327f7')
         ax.set_xticks(x)
-        ax.set_xticklabels(ordered_labels, rotation='vertical')
+        ax.set_xticklabels(ordered_labels, rotation=45, horizontalalignment='right')
         for i in rect:
             height = i.get_height()
             ax.annotate('{}'.format(height),
