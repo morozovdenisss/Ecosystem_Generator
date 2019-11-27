@@ -40,7 +40,14 @@ def remove_cols():
     
 def coma_remove(item):
     if ',' in item:
-        item = item.split(',', 1)[0].replace(',', '')
+        count = 0
+        iter_list = item.split(',', 1)
+        size = []
+        for i in range(len(iter_list) - 1):
+            item = item.split(',', 1)[count].replace(',', '')
+            size.append(file[file['Your industry'] == i])
+            count +=  1
+        item = item.split(',', 1)[size.index(max(size))].replace(',', '')
     return str(item)
 
 # Step 2 
@@ -797,6 +804,7 @@ def launch():
     for i in range(0, 3):
         table_maker(i)
     document.save('Report.docx')
+    print('The script is successfully completed. Denis is happy!')
 
 # Need to figure out how to change .docx into .pdf
 if __name__ == '__main__':    
