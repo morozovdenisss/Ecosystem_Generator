@@ -407,12 +407,14 @@ class graph():
                         textcoords="offset points",
                         ha='center', va='bottom')
         ax.tick_params(left=False, labelleft=False, bottom=False)
-        ax.spines['top'].set_visible(False)
+        '''ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_visible(False)
+        ax.spines['left'].set_visible(False)'''
         plt.tick_params(axis='x', which='major', labelsize = 9)
         fig.tight_layout()
-        plt.savefig('images/country_graph.png', bbox_inches='tight', transparent=True)
+        plt.savefig('images/country_graph.png', bbox_inches='tight')
+        plt.clf()
+        plt.close()
         
     def country_map(self):
         shapefile = 'map/ne_110m_admin_0_countries.shp'
@@ -746,6 +748,7 @@ def launch():
     global open_call
     print('Write the name of the open call you downloaded:')
     open_call = input()
+    print('Executing the script, wait 15 seconds.')
     plt.style.use('seaborn-darkgrid')
     csv_from_excel()
     remove_cols()
