@@ -1,19 +1,45 @@
 import matplotlib.pyplot as plt
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox, TextArea, DrawingArea 
-from matplotlib.gridspec import GridSpec
+import matplotlib.gridspec as gsa
 import matplotlib.image as mpimg
 import numpy as np
 import pandas as pd
 import matplotlib.image as mpimg
 import numpy as np
 import pandas as pd
+import gmpy2
 import os
+import re
 from PIL import Image
 
 class graph():
+    def adapt_csv(self):
+        f=pd.read_csv("csv_files/csv_file.csv")
+        keep_col = ['Startup Stage', 'Sub-Stage II', 'Name', 'Website']
+        new_f = f[keep_col]
+        new_f = new_f.dropna()
+        new_f.to_csv("csv_files/as_new_csv.csv", index=True)
+        
     def idea(self): 
+        global directory_real
+        global folders
+        global count
+        count = 0
+        folders = ['01_01_Inspirational_Events', '01_01_Startup_Media', '01_02_Best_Practices', '01_02_Training_Feedback', '01_03_Build_First_Product', '01_03_Team_Formation', '02_01_Establish', '02_01_Workspace', '02_02_Formalize','02_02_Prepare for Seed',  '02_03_Pitch _ Demo', '02_03_Seed Accelerators', '03_01_Investor Networking', '03_01_Major Media', '03_02_Angels - Micro-VCs', '03_02_Venture Capitalists', '03_03_Expansion', '03_03_Infrastructure']
+        for i in folders:
+            if count < 6:
+                stage = '01_Idea_Stage/'
+            elif count > 5 and count < 12:
+                stage = '02_Launch_Stage/'
+            elif count > 11:
+                stage = '03_Growth_Stage/'
+            directory = os.getcwd() + '/logos/' + stage
+            directory_real = directory + i + '/'
+            self.image_placer(directory_real)
+            count += 1
+        
         fig = plt.figure(constrained_layout=False, dpi=300, figsize=(15,10))
-        gs = GridSpec(18, 6, figure=fig)
+        gs = gsa.GridSpec(22, 6, figure=fig)
         ax1 = fig.add_subplot(gs[0, 0:])
         ax1.text(0.5, 0.5, r'01. Idea Stage', fontsize=15, va="center", ha="center")
         ax2 = fig.add_subplot(gs[1, 0:2])
@@ -22,119 +48,99 @@ class graph():
         ax3.text(0.5, 0.5, r'Educate', fontsize=15, va="center", ha="center")
         ax4 = fig.add_subplot(gs[1, 4:6])
         ax4.text(0.5, 0.5, r'Validate', fontsize=15, va="center", ha="center")
-        ax5 = fig.add_subplot(gs[2:6, 0])
-        directory = os.fsencode('/Users/denismorozov/Desktop/git/ecosystem_generator/images/as/')
-        self.image_placer(ax5, directory)
-        ax6 = fig.add_subplot(gs[2:6, 1])
-        self.image_placer(ax6, directory)
-        ax7 = fig.add_subplot(gs[2:6, 2])
-        self.image_placer(ax7, directory)
-        ax8 = fig.add_subplot(gs[2:6, 3])
-        self.image_placer(ax8, directory)
-        ax9 = fig.add_subplot(gs[2:6, 4])
-        self.image_placer(ax9, directory)
-        ax10 = fig.add_subplot(gs[2:6, 5])
-        self.image_placer(ax10, directory)
 
-        ax11 = fig.add_subplot(gs[6, 0:])
-        ax11.text(0.5, 0.5, r'02. Launch Stage', fontsize=15, va="center", ha="center")
-        ax12 = fig.add_subplot(gs[7, 0:2])
-        ax12.text(0.5, 0.5, r'Start', fontsize=15, va="center", ha="center")
-        ax13 = fig.add_subplot(gs[7, 2:4])
-        ax13.text(0.5, 0.5, r'Develop', fontsize=15, va="center", ha="center")
-        ax14 = fig.add_subplot(gs[7, 4:6])
-        ax14.text(0.5, 0.5, r'Launch', fontsize=15, va="center", ha="center")
-        ax15 = fig.add_subplot(gs[8:12, 0])
-        directory = os.fsencode('/Users/denismorozov/Desktop/git/ecosystem_generator/images/as/')
-        self.image_placer(ax15, directory)
-        ax16 = fig.add_subplot(gs[8:12, 1])
-        self.image_placer(ax16, directory)
-        ax17 = fig.add_subplot(gs[8:12, 2])
-        self.image_placer(ax17, directory)
-        ax18 = fig.add_subplot(gs[8:12, 3])
-        self.image_placer(ax18, directory)
-        ax19 = fig.add_subplot(gs[8:12, 4])
-        self.image_placer(ax19, directory)
-        ax20 = fig.add_subplot(gs[8:12, 5])
-        self.image_placer(ax20, directory)
+        for i in range(0,6):
+            ax5 = fig.add_subplot(gs[3:7, i])
+            directory_real = os.getcwd() + '/images/' + folders[i] + '.png'
+            #self.place_created(ax5, directory_real, i)
+            new = re.sub("\d", "", folders[i])
+            new = re.sub("_", " ", new)
+            ax5.set_title(new, fontsize = 8)
+            img = Image.open(directory_real)
+            ax5.imshow(img)
+            ax5.axis('off')
         
-        ax21 = fig.add_subplot(gs[12, 0:])
+        ax11 = fig.add_subplot(gs[7, 0:])
+        ax11.text(0.5, 0.5, r'02. Launch Stage', fontsize=15, va="center", ha="center")
+        ax12 = fig.add_subplot(gs[8, 0:2])
+        ax12.text(0.5, 0.5, r'Start', fontsize=15, va="center", ha="center")
+        ax13 = fig.add_subplot(gs[8, 2:4])
+        ax13.text(0.5, 0.5, r'Develop', fontsize=15, va="center", ha="center")
+        ax14 = fig.add_subplot(gs[8, 4:6])
+        ax14.text(0.5, 0.5, r'Launch', fontsize=15, va="center", ha="center")
+        
+        count = 6
+        for i in range(0,6):
+            ax6 = fig.add_subplot(gs[10:14, i])
+            directory_real = os.getcwd() + '/images/' + folders[count] + '.png'
+            #self.place_created(ax5, directory_real, i)
+            new = re.sub("\d", "", folders[count])
+            new = re.sub("_", " ", new)
+            ax6.set_title(new, fontsize = 8)
+            img = Image.open(directory_real)
+            ax6.imshow(img)
+            ax6.axis('off')
+            count+=1
+        
+        ax21 = fig.add_subplot(gs[15, 0:])
         ax21.text(0.5, 0.5, r'03. Growth Stage', fontsize=15, va="center", ha="center")
-        ax22 = fig.add_subplot(gs[13, 0:2])
+        ax22 = fig.add_subplot(gs[16, 0:2])
         ax22.text(0.5, 0.5, r'Recognition', fontsize=15, va="center", ha="center")
-        ax23 = fig.add_subplot(gs[13, 2:4])
+        ax23 = fig.add_subplot(gs[16, 2:4])
         ax23.text(0.5, 0.5, r'Funding', fontsize=15, va="center", ha="center")
-        ax24 = fig.add_subplot(gs[13, 4:6])
+        ax24 = fig.add_subplot(gs[16, 4:6])
         ax24.text(0.5, 0.5, r'Growth', fontsize=15, va="center", ha="center")
-        ax25 = fig.add_subplot(gs[14:, 0])
-        directory = os.fsencode('/Users/denismorozov/Desktop/git/ecosystem_generator/images/as/')
-        self.image_placer(ax25, directory)
-        ax26 = fig.add_subplot(gs[14:, 1])
-        self.image_placer(ax26, directory)
-        ax27 = fig.add_subplot(gs[14:, 2])
-        self.image_placer(ax27, directory)
-        ax28 = fig.add_subplot(gs[14:, 3])
-        self.image_placer(ax28, directory)
-        ax29 = fig.add_subplot(gs[14:, 4])
-        self.image_placer(ax29, directory)
-        ax30 = fig.add_subplot(gs[14:, 5])
-        self.image_placer(ax30, directory)
-    
+        
+        count = 12
+        for i in range(0,6):
+            ax7 = fig.add_subplot(gs[18:, i])
+            directory_real = os.getcwd() + '/images/' + folders[count] + '.png'
+            #self.place_created(ax5, directory_real, i)
+            new = re.sub("\d", "", folders[count])
+            new = re.sub("_", " ", new)
+            ax7.set_title(new, fontsize = 8)
+            img = Image.open(directory_real)
+            ax7.imshow(img)
+            ax7.axis('off')
+            count+=1
+                
         #fig.suptitle("Ecosystem Map")
         for i, ax in enumerate(fig.axes):
             ax.tick_params(labelbottom=False, labelleft=False, bottom = False, left = False)
         plt.savefig('images/austrian_map.png',bbox_inches='tight')
         plt.show()
         
-    
-    def image_placer(self, _, directory):
+    def image_placer(self, directory_real):
         #_.set_title(industries[industry], fontsize = 8)
-        count = 1
-        basewidth = 25
         filenames = []
-        for i in os.listdir(directory):
+        for i in os.listdir(directory_real):
             filename = os.fsdecode(i)
-            if filename.endswith( ('.jpeg', '.png', '.jpg', '.gif') ): 
+            if filename.endswith(('.jpeg', '.png', '.jpg', '.gif')): 
                 filenames.append(filename)
-        for i in filenames:
-            img = Image.open('images/as/' + i)
-            wpercent = (basewidth/float(img.size[0]))
-            hsize = int((float(img.size[1])*float(wpercent)))
-            img = img.resize((basewidth,hsize), Image.ANTIALIAS)
-            img.save('images/as/' + i) 
-            arr_AS = mpimg.imread('images/as/' + i)
-            imagebox = OffsetImage(arr_AS)
-            if count == 1:
-                x, y  = 0.2, 0.2
-            if count > 1 and count < 4:
-                x += 0.3
-            if count  == 4:
-                x = 0.2
-                y = 0.5
-            if count > 4 and count < 7:
-                x += 0.3
-            if count  == 7:
-                x = 0.2
-                y = 0.8
-            if count > 8 and count < 10:
-                x += 0.3
-            if count == 10:
-                x, y  = 0.2, 0.2
-                count = 1
-                break
-            AS = AnnotationBbox(imagebox, (x, y))
-            count += 1
-            _.add_artist(AS)
-
+        square, rem = gmpy2.isqrt_rem(len(filenames))
+        fig1, axs = plt.subplots(square+1, square+1, dpi=300, figsize=(10, 10))
+        axs = axs.flatten()
+        for i, ax in zip(filenames,axs):
+            img = np.array(Image.open(str(directory_real) + i))
+            # If something doesn't work, delete the faulty logo
+            #print(i)
+            ax.axis('off')
+            ax.imshow(img)
+        for i, ax in enumerate(fig1.axes):
+            ax.tick_params(labelbottom=False, labelleft=False, bottom = False, left = False)
+            ax.axis('off')
+        plt.savefig('images/' + folders[count] + '.png', bbox_inches='tight')
+        plt.close
+            
 def launch():
     g = graph()
     g.idea()
 launch()
 
-
-
-
 '''
+This code was intended forthe creationof PieChart 
+- it is currently postponed in favor of a simpler graph.
+
 file = pd.read_csv('EcoSystem.csv')
 file.head()
 #Iterate columns, get the relevant data from Sub-Type II
