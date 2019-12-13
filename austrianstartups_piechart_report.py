@@ -1,10 +1,5 @@
 import matplotlib.pyplot as plt
-from matplotlib.offsetbox import OffsetImage, AnnotationBbox, TextArea, DrawingArea 
 import matplotlib.gridspec as gsa
-import matplotlib.image as mpimg
-import numpy as np
-import pandas as pd
-import matplotlib.image as mpimg
 import numpy as np
 import pandas as pd
 import gmpy2
@@ -20,10 +15,11 @@ class graph():
         new_f = new_f.dropna()
         new_f.to_csv("csv_files/as_new_csv.csv", index=True)
         
-    def idea(self): 
+    def maker(self): 
         global directory_real
         global folders
         global count
+        # Createe ecosystem maps, by iterating contents of all folders 
         count = 0
         folders = ['01_01_Inspirational_Events', '01_01_Startup_Media', '01_02_Best_Practices', '01_02_Training_Feedback', '01_03_Build_First_Product', '01_03_Team_Formation', '02_01_Establish', '02_01_Workspace', '02_02_Formalize','02_02_Prepare for Seed',  '02_03_Pitch _ Demo', '02_03_Seed Accelerators', '03_01_Investor Networking', '03_01_Major Media', '03_02_Angels - Micro-VCs', '03_02_Venture Capitalists', '03_03_Expansion', '03_03_Infrastructure']
         for i in folders:
@@ -37,7 +33,7 @@ class graph():
             directory_real = directory + i + '/'
             self.image_placer(directory_real)
             count += 1
-        
+        # Create the main figure, add subplots, insert text and images into subplots
         fig = plt.figure(constrained_layout=False, dpi=300, figsize=(15,10))
         gs = gsa.GridSpec(22, 6, figure=fig)
         ax1 = fig.add_subplot(gs[0, 0:])
@@ -48,7 +44,6 @@ class graph():
         ax3.text(0.5, 0.5, r'Educate', fontsize=15, va="center", ha="center")
         ax4 = fig.add_subplot(gs[1, 4:6])
         ax4.text(0.5, 0.5, r'Validate', fontsize=15, va="center", ha="center")
-
         for i in range(0,6):
             ax5 = fig.add_subplot(gs[3:7, i])
             directory_real = os.getcwd() + '/images/' + folders[i] + '.png'
@@ -68,7 +63,6 @@ class graph():
         ax13.text(0.5, 0.5, r'Develop', fontsize=15, va="center", ha="center")
         ax14 = fig.add_subplot(gs[8, 4:6])
         ax14.text(0.5, 0.5, r'Launch', fontsize=15, va="center", ha="center")
-        
         count = 6
         for i in range(0,6):
             ax6 = fig.add_subplot(gs[10:14, i])
@@ -81,7 +75,7 @@ class graph():
             ax6.imshow(img)
             ax6.axis('off')
             count+=1
-        
+            
         ax21 = fig.add_subplot(gs[15, 0:])
         ax21.text(0.5, 0.5, r'03. Growth Stage', fontsize=15, va="center", ha="center")
         ax22 = fig.add_subplot(gs[16, 0:2])
@@ -90,7 +84,6 @@ class graph():
         ax23.text(0.5, 0.5, r'Funding', fontsize=15, va="center", ha="center")
         ax24 = fig.add_subplot(gs[16, 4:6])
         ax24.text(0.5, 0.5, r'Growth', fontsize=15, va="center", ha="center")
-        
         count = 12
         for i in range(0,6):
             ax7 = fig.add_subplot(gs[18:, i])
@@ -102,16 +95,14 @@ class graph():
             img = Image.open(directory_real)
             ax7.imshow(img)
             ax7.axis('off')
-            count+=1
-                
-        #fig.suptitle("Ecosystem Map")
+            count+=1    
+        # Remove axis and save the figure
         for i, ax in enumerate(fig.axes):
             ax.tick_params(labelbottom=False, labelleft=False, bottom = False, left = False)
         plt.savefig('images/austrian_map.png',bbox_inches='tight')
         plt.show()
         
     def image_placer(self, directory_real):
-        #_.set_title(industries[industry], fontsize = 8)
         filenames = []
         for i in os.listdir(directory_real):
             filename = os.fsdecode(i)
@@ -122,7 +113,7 @@ class graph():
         axs = axs.flatten()
         for i, ax in zip(filenames,axs):
             img = np.array(Image.open(str(directory_real) + i))
-            # If something doesn't work, delete the faulty logo
+            # If something doesn't work, delete the faulty logo, by looking what name was last before failure
             #print(i)
             ax.axis('off')
             ax.imshow(img)
@@ -134,7 +125,7 @@ class graph():
             
 def launch():
     g = graph()
-    g.idea()
+    g.maker()
 launch()
 
 '''
