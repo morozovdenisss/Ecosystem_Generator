@@ -9,6 +9,7 @@ from PIL import Image
 
 class graph():
     def adapt_csv(self):
+        # Unused, but created for a possible future use-case.
         f=pd.read_csv("csv_files/csv_file.csv")
         keep_col = ['Startup Stage', 'Sub-Stage II', 'Name', 'Website']
         new_f = f[keep_col]
@@ -19,7 +20,9 @@ class graph():
         global directory_real
         global folders
         global count
+        global errors
         # Createe ecosystem maps, by iterating contents of all folders 
+        errors = []
         count = 0
         folders = ['01_01_Inspirational_Events', '01_01_Startup_Media', '01_02_Best_Practices', '01_02_Training_Feedback', '01_03_Build_First_Product', '01_03_Team_Formation', '02_01_Establish', '02_01_Workspace', '02_02_Formalize','02_02_Prepare for Seed',  '02_03_Pitch _ Demo', '02_03_Seed Accelerators', '03_01_Investor Networking', '03_01_Major Media', '03_02_Angels - Micro-VCs', '03_02_Venture Capitalists', '03_03_Expansion', '03_03_Infrastructure']
         for i in folders:
@@ -47,14 +50,12 @@ class graph():
         for i in range(0,6):
             ax5 = fig.add_subplot(gs[3:7, i])
             directory_real = os.getcwd() + '/images/' + folders[i] + '.png'
-            #self.place_created(ax5, directory_real, i)
             new = re.sub("\d", "", folders[i])
             new = re.sub("_", " ", new)
             ax5.set_title(new, fontsize = 8)
             img = Image.open(directory_real)
             ax5.imshow(img)
             ax5.axis('off')
-        
         ax11 = fig.add_subplot(gs[7, 0:])
         ax11.text(0.5, 0.5, r'02. Launch Stage', fontsize=15, va="center", ha="center")
         ax12 = fig.add_subplot(gs[8, 0:2])
@@ -67,7 +68,6 @@ class graph():
         for i in range(0,6):
             ax6 = fig.add_subplot(gs[10:14, i])
             directory_real = os.getcwd() + '/images/' + folders[count] + '.png'
-            #self.place_created(ax5, directory_real, i)
             new = re.sub("\d", "", folders[count])
             new = re.sub("_", " ", new)
             ax6.set_title(new, fontsize = 8)
@@ -75,7 +75,6 @@ class graph():
             ax6.imshow(img)
             ax6.axis('off')
             count+=1
-            
         ax21 = fig.add_subplot(gs[15, 0:])
         ax21.text(0.5, 0.5, r'03. Growth Stage', fontsize=15, va="center", ha="center")
         ax22 = fig.add_subplot(gs[16, 0:2])
@@ -88,7 +87,6 @@ class graph():
         for i in range(0,6):
             ax7 = fig.add_subplot(gs[18:, i])
             directory_real = os.getcwd() + '/images/' + folders[count] + '.png'
-            #self.place_created(ax5, directory_real, i)
             new = re.sub("\d", "", folders[count])
             new = re.sub("_", " ", new)
             ax7.set_title(new, fontsize = 8)
@@ -109,14 +107,16 @@ class graph():
             if filename.endswith(('.jpeg', '.png', '.jpg', '.gif')): 
                 filenames.append(filename)
         square, rem = gmpy2.isqrt_rem(len(filenames))
-        fig1, axs = plt.subplots(square+1, square+1, dpi=300, figsize=(10, 10))
+        fig1, axs = plt.subplots(square+1, square+1, dpi=300, figsize=(12, 12))
         axs = axs.flatten()
         for i, ax in zip(filenames,axs):
             img = np.array(Image.open(str(directory_real) + i))
-            # If something doesn't work, delete the faulty logo, by looking what name was last before failure
-            #print(i)
             ax.axis('off')
-            ax.imshow(img)
+            try:
+                ax.imshow(img)
+            except:
+                errors.append(i)
+                pass
         for i, ax in enumerate(fig1.axes):
             ax.tick_params(labelbottom=False, labelleft=False, bottom = False, left = False)
             ax.axis('off')
@@ -124,13 +124,19 @@ class graph():
         plt.close
             
 def launch():
+    print('Running the script, be patient, young padawan.')
     g = graph()
     g.maker()
+    if not errors:
+        print('The job is complete! You can find the map in Images folder. There were no errors during the runtime.')
+    else:
+        print('The job is complete! You can find the map in Images folder. The following files are corrupt, so please delete them ' + errors)
+        
 launch()
 
 '''
-This code was intended forthe creationof PieChart 
-- it is currently postponed in favor of a simpler graph.
+This code was intended forthe creation of PieChart 
+- it is currently postponed in favor of a simpler graph that serves a different purpose
 
 file = pd.read_csv('EcoSystem.csv')
 file.head()
