@@ -30,11 +30,11 @@ class graph():
                 stage = '01_Idea_Stage/'
             elif count > 5 and count < 12:
                 if count == 8:
-                    print('Did you know that fish and birds both have 2 eyes? Oh, and we finished third of processes.')
+                    print('Did you know that fish and birds both have 2 eyes? Oh, and we finished 35% of the work.')
                 stage = '02_Launch_Stage/'
             elif count > 11:
                 if count == 16:
-                    print('Unlike Simpsons, we are close to finishing.')
+                    print('Unlike Simpsons, we are 90% done.')
                 stage = '03_Growth_Stage/'
             directory = os.getcwd() + '/logos/' + stage
             directory_real = directory + i + '/'
