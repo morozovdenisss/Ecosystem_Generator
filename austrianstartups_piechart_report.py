@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gsa
+plt.ioff()
 import numpy as np
 import pandas as pd
 import gmpy2
@@ -21,7 +22,6 @@ class graph():
         global folders
         global count
         global errors
-        # Createe ecosystem maps, by iterating contents of all folders 
         errors = []
         count = 0
         folders = ['01_01_Inspirational_Events', '01_01_Startup_Media', '01_02_Best_Practices', '01_02_Training_Feedback', '01_03_Build_First_Product', '01_03_Team_Formation', '02_01_Establish', '02_01_Workspace', '02_02_Formalize','02_02_Prepare for Seed',  '02_03_Pitch _ Demo', '02_03_Seed Accelerators', '03_01_Investor Networking', '03_01_Major Media', '03_02_Angels - Micro-VCs', '03_02_Venture Capitalists', '03_03_Expansion', '03_03_Infrastructure']
@@ -29,8 +29,12 @@ class graph():
             if count < 6:
                 stage = '01_Idea_Stage/'
             elif count > 5 and count < 12:
+                if count == 8:
+                    print('Did you know that fish and birds both have 2 eyes? Oh, and we finished third of processes.')
                 stage = '02_Launch_Stage/'
             elif count > 11:
+                if count == 16:
+                    print('Unlike Simpsons, we are close to finishing.')
                 stage = '03_Growth_Stage/'
             directory = os.getcwd() + '/logos/' + stage
             directory_real = directory + i + '/'
@@ -98,7 +102,7 @@ class graph():
         for i, ax in enumerate(fig.axes):
             ax.tick_params(labelbottom=False, labelleft=False, bottom = False, left = False)
         plt.savefig('images/austrian_map.png',bbox_inches='tight')
-        plt.show()
+        plt.close(fig)
         
     def image_placer(self, directory_real):
         filenames = []
@@ -121,7 +125,7 @@ class graph():
             ax.tick_params(labelbottom=False, labelleft=False, bottom = False, left = False)
             ax.axis('off')
         plt.savefig('images/' + folders[count] + '.png', bbox_inches='tight')
-        plt.close
+        plt.close(fig1)
             
 def launch():
     print('Running the script, be patient, young padawan.')
