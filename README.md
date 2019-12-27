@@ -9,10 +9,15 @@ You can view the report with dummy data at the following link: [Report 1](https:
 Following types of data are included:
 ![Types of Graphs](reports/Graphs%20in%20Report.png)
 
-The project is close to completion.
+The project is completed.
 
 ## Austrian Startups Piechart Report
-This project has similar purpose to the previous, but required a different visualization and many more industries to be included in the circle shape. Due to the issues with image resizing (image looses too much quality when resized into logo), the project was adapted, and done by hand in Sketch.
+This project has similar purpose to the previous, but required a different visualization and many more industries and startups to be included. The main idea is to quickly visualize all startups from the database for internal usage and afterward to do the map by hand in sketch. 
+
+![Austrian Startups](reports/Auto%20Generated%20Map.png)
+
+
+The project is completed.
 
 ## Contributing
 Comments and recommendations are very welcome.
